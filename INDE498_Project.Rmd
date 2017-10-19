@@ -1,0 +1,30 @@
+---
+title: "Project"
+author: "Steven Hwang, Haena Kim, Victoria Diaz"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+"With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
+...
+The Ames Housing dataset was compiled by Dean De Cock for use in data science education. It's an incredible alternative for data scientists looking for a modernized and expanded version of the often cited Boston Housing dataset."
+-- Kaggle 
+
+
+
+Requirements for the proposal: 
+- 2 pages long 
+- project description 
+- How and where you obtained the data 
+- Questions you may want to address using the data and corresponding data minig & statistical learning methods 
+
+
+# Project Description 
+
+# Data 
+
+# Questions to Address
