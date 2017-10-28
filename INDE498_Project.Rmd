@@ -4,27 +4,93 @@ author: "Steven Hwang, Haena Kim, Victoria Diaz"
 output: html_document
 ---
 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+
+# finding the dimension of our datasets
+dim(train) 
+dim(test)
+
+# create a data frame that returns the number of NA values in each column
+train_na <- data.frame(column = c(-1), is_na = c(-1))
+for (i in c(1:79)){ 
+  train_na <- rbind(train_na, c(i, sum(is.na(train[, i])))) 
+}
+train_na <- train_na[c(-1), ]
+
+# print the names of the factors with NA values
+# The only factors that have NA values are columns 4, 7, 26, 27, 31, 32, 33, 34, 36, 43, 58, 59, 60, 61, 64, 65, 73, 74, 75
+for (i in c(4, 7, 26, 27, 31, 32, 33, 34, 36, 43, 58, 59, 60, 61, 64, 65, 73, 74, 75)){ 
+  print(c(i, names(train)[i]))
+}
 ```
 
 
-"With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
-...
-The Ames Housing dataset was compiled by Dean De Cock for use in data science education. It's an incredible alternative for data scientists looking for a modernized and expanded version of the often cited Boston Housing dataset."
--- Kaggle 
-
-
-
-Requirements for the proposal: 
-- 2 pages long 
-- project description 
-- How and where you obtained the data 
-- Questions you may want to address using the data and corresponding data minig & statistical learning methods 
-
-
-# Project Description 
-
-# Data 
+# Objectives
 
 # Questions to Address
+Our project aims to address the following questions. 
+
+1. Which predictors are the most important in predicting the price of a home? 
+
+We plan on using linear regression, LASSO, and PCA for dimension reduction as well as possibly exploring other feature selection techniques if needed. 
+
+2. Do different neighborhoods affect housing prices? 
+
+We assume the answer to this question is "Yes", and we plan to discover how. We can use linear regression to identify the important how the different neighborhoods affect the housing prices as well as a preform a spacial cluster analysis on the data. 
+
+3. Are there significant temporal trends? 
+
+We suspect that there will be interesting temporal trends since this dataset includes information from 2006 until 2010, i.e., it contains information about housing prices before, during, and after the housing bubble. We are interested in discovering whether there will be major differences between home price prediction models restricted to certain years, and we aim to explain these possible differences by events which occurred in each of those years. 
+
+4. Can we produce one relatively accurate price prediction model? 
+
+We will use a variety of techniques including linear regression, random forests, and cluster analysis to take into consideration the location of the home as well as temporal trends. We will take the previous responses into consideration when creating our final model. 
+
+5. How accurate is our prediction model when used to predict the prices of 1-story homes versus 2-story homes?
+
+We will restrict our dataset to only 1-story/2-story homes and test our model using linear regression. 
+
+
+
+
+# External Sources pertaining to the Dataset
+Data Documentation 
+
+http://www.amstat.org/publications/jse/v19n3/decock/DataDocumentation.txt
+
+Kaggle Competition
+House Prices: Advanced Regression Techniques
+
+https://www.kaggle.com/c/house-prices-advanced-regression-techniques
+
+Data 
+
+http://www.amstat.org/publications/jse/v19n3/decock/AmesHousing.xls
+
+Map of residential assessment neighborhoods
+
+https://ww2.amstat.org/publications/jse/v19n3/decock/AmesResidential.pdf
+
+Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project
+-- This is the paper that was published by the person who created the dataset (Dean Cock)
+
+https://ww2.amstat.org/publications/jse/v19n3/decock.pdf
+
+
+# Requirements for the proposal
+Just to keep in mind, these are the requirements for the proposal
+
+- 2 pages long 
+
+- project description 
+
+- How and where you obtained the data 
+
+- Questions you may want to address using the data and corresponding data minig & statistical learning methods
+
