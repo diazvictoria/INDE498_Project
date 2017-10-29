@@ -1,5 +1,5 @@
 ---
-title: "Project"
+title: "Ames, Iowa Housing Data"
 author: "Steven Hwang, Haena Kim, Victoria Diaz"
 output: html_document
 ---
@@ -30,11 +30,18 @@ for (i in c(4, 7, 26, 27, 31, 32, 33, 34, 36, 43, 58, 59, 60, 61, 64, 65, 73, 74
 }
 ```
 
+# Project Description
 
-# Objectives
+The Seattle housing market is one of the hottest housing markets in the United States. The median house price for houses sold in Seattle has been steadily increasing over the years. From data obtained from Trulia, the Median Housing price increased from \$450,000 (September 2014) to $660,000 (August 2017) [@trulia]. Our project was motivated by how competitve the Seattle housing market is and we want to get a better understanding of how the characteristics of properties affect the price. To accomplish this goal, we chose to analyze data obtained for properties sold in Ames, Iowa. 
 
-# Questions to Address
-Our project aims to address the following questions. 
+This project is focused on answering questions from the aspect a of first-time buyer and seller. By analyzing how the characteristics of a property (number of rooms, square footage, etc.) affect the selling price, we can provide easy to understand results that allow first-time buyers and sellers confidently enter the housing market.
+
+# Data Description and Exploration
+
+
+
+# Project Objectives and Questions
+Our project objectives are to address the following questions. 
 
 1. Which predictors are the most important in predicting the price of a home? 
 
@@ -94,3 +101,10 @@ Just to keep in mind, these are the requirements for the proposal
 
 - Questions you may want to address using the data and corresponding data minig & statistical learning methods
 
+---
+references:
+- id: trulia
+  title: Real Estate Data for Seattle
+  author: Trulia
+  URL: 'https://www.trulia.com/real_estate/Seattle-Washington/market-trends/'
+---
