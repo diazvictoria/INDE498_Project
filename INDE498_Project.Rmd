@@ -34,7 +34,7 @@ for (i in c(4, 7, 26, 27, 31, 32, 33, 34, 36, 43, 58, 59, 60, 61, 64, 65, 73, 74
 
 The Seattle housing market is one of the hottest housing markets in the United States. The median house price for houses sold in Seattle has been steadily increasing over the years. From data obtained from Trulia, the Median Housing price increased from \$450,000 (September 2014) to $660,000 (August 2017) [@trulia]. Figure 1, shows their is a increasing trend of the Seattle median sales price for the past 5 years and a giant jump for the past year. Our project was motivated by how competitve the Seattle housing market is and we want to get a better understanding of how the characteristics of properties affect the price. To accomplish this goal, we chose to analyze data obtained for properties sold in Ames, Iowa. 
 
-![Median Seattle housing sales price over the past 5 years (2012-2017).](/MedianPriceSeattle.JPG)
+![Figure 1: Median Seattle housing sales price over the past 5 years (2012-2017).](MedianPriceSeattle.JPG)
 
 This project is focused on answering questions from the aspect a of first-time buyer and seller. By analyzing how the characteristics of a property (number of rooms, square footage, etc.) affect the selling price, we can provide easy to understand results that allow first-time buyers and sellers confidently enter the housing market.
 
