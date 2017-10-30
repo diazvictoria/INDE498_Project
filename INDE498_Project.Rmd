@@ -39,8 +39,11 @@ The Seattle housing market is one of the hottest housing markets in the United S
 This project is focused on answering questions from the aspect a of first-time buyer and seller. By analyzing how the characteristics of a property (number of rooms, square footage, etc.) affect the selling price, we can provide easy to understand results that allow first-time buyers and sellers confidently enter the housing market.
 
 # Data Description and Exploration
+Based off the Boston Housing Data Set created by Harrison and Rubinfeld (1978), Dean De Cock sorted through data collected by the Ames City Assessor’s Office of Ames, Iowa. Cock’s final dataset contains details of the 2,930 residential properties sold in Ames between the years of 2006 and 2010. Each observation represents a unique home; homes which were resold within the four year time period were only recorded once. Moreover, each observation contains roughly 23 nominal variables, 23 ordinal variables, 14 discrete variables, and 20 continuous variables. In general, the continuous variables represent the dimension of an aspect of the house, such as the square feet of the first floor; the discrete variables quantify the amount of a particular aspect of the house, such as the number bedrooms; the ordinal variables rate aspects of the house, such as the height of the basement; and the nominal variables identify the types of aspects of the house, such as the type of foundation. Every variable was chosen from the raw data with the idea that it "could be easily understood by users at all levels," which meant that 34 variables had to be left out [@cock]. Finally, there are NA values in the dataset when appropriate. For instance, not every house has a rating for the quality of the fireplace since not every house has a fireplace.
 
+Our group discovered this dataset on Kaggle.com as part of a competition which ended on March 1st of 2017. The submissions of this competition ``are evaluated on Root-Mean-Squared Error (RMSE) between the  logarithm of the predicted value and the logarithm of the observed sales price." Two datasets are provided: the training dataset has 1460 observations and the testing dataset has 1459 observations. The public leaderboard shows the least RMSE to be 0.06628.
 
+(Data exploration has not been included.)
 
 # Project Objectives and Questions
 Our project objectives are to address the following questions. 
@@ -86,11 +89,6 @@ Map of residential assessment neighborhoods
 
 https://ww2.amstat.org/publications/jse/v19n3/decock/AmesResidential.pdf
 
-Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project
--- This is the paper that was published by the person who created the dataset (Dean Cock)
-
-https://ww2.amstat.org/publications/jse/v19n3/decock.pdf
-
 
 # Requirements for the proposal
 Just to keep in mind, these are the requirements for the proposal
@@ -109,4 +107,9 @@ references:
   title: Real Estate Data for Seattle
   author: Trulia
   URL: 'https://www.trulia.com/real_estate/Seattle-Washington/market-trends/'
+
+- id: cock 
+  title: Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project
+  author: Dean De Cock
+  URL: https://ww2.amstat.org/publications/jse/v19n3/decock.pdf
 ---
