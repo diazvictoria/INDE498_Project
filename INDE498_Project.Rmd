@@ -50,7 +50,7 @@ We will now do a preliminary exploration of the data.
 
 We notice the relationship between the amount of area above the ground and the sales price changes depending on the number of stories of the house. 
 
-```{r, include = FALSE} 
+```{r, include = TRUE} 
 library(ggplot2)
 
 train$story <- ifelse(train$HouseStyle == "1Story", 1, ifelse(train$HouseStyle == "2Story", 2, "Other"))
