@@ -1,9 +1,10 @@
 ---
 title: "Ames, Iowa Housing Data"
 author: "Steven Hwang, Haena Kim, Victoria Diaz"
-output: html_document
+output:
+    html_document: 
+     smart: false
 ---
-
 
 
 ```{r setup, include=FALSE}
@@ -40,11 +41,12 @@ The Seattle housing market is one of the hottest housing markets in the United S
 This project is focused on answering questions from the aspect a of first-time buyer and seller. By analyzing how the characteristics of a property (number of rooms, square footage, etc.) affect the selling price, we can provide easy to understand results that allow first-time buyers and sellers confidently enter the housing market.
 
 # Data Description and Exploration
-Based off the Boston Housing Data Set created by Harrison and Rubinfeld (1978), Dean De Cock sorted through data collected by the Ames City Assessor’s Office of Ames, Iowa. Cock’s final dataset contains details of the 2,930 residential properties sold in Ames between the years of 2006 and 2010. Each observation represents a unique home; homes which were resold within the four year time period were only recorded once. Moreover, each observation contains roughly 23 nominal variables, 23 ordinal variables, 14 discrete variables, and 20 continuous variables. In general, the continuous variables represent the dimension of an aspect of the house, such as the square feet of the first floor; the discrete variables quantify the amount of a particular aspect of the house, such as the number bedrooms; the ordinal variables rate aspects of the house, such as the height of the basement; and the nominal variables identify the types of aspects of the house, such as the type of foundation. Every variable was chosen from the raw data with the idea that it "could be easily understood by users at all levels," which meant that 34 variables had to be left out [@cock]. Finally, there are NA values in the dataset when appropriate. For instance, not every house has a rating for the quality of the fireplace since not every house has a fireplace.
+Based off the Boston Housing Data Set created by Harrison and Rubinfeld (1978), Dean De Cock sorted through data collected by the Ames City Assessor's Office of Ames, Iowa. Cock's final dataset contains details of the 2,930 residential properties sold in Ames between the years of 2006 and 2010. Each observation represents a unique home; homes which were resold within the four year time period were only recorded once. Moreover, each observation contains roughly 23 nominal variables, 23 ordinal variables, 14 discrete variables, and 20 continuous variables. In general, the continuous variables represent the dimension of an aspect of the house, such as the square feet of the first floor; the discrete variables quantify the amount of a particular aspect of the house, such as the number bedrooms; the ordinal variables rate aspects of the house, such as the height of the basement; and the nominal variables identify the types of aspects of the house, such as the type of foundation. Every variable was chosen from the raw data with the idea that it "could be easily understood by users at all levels," which meant that 34 variables had to be left out [@cock]. Finally, there are NA values in the dataset when appropriate. For instance, not every house has a rating for the quality of the fireplace since not every house has a fireplace.
 
 ![Map of the properties that are included in the data](ames.JPG)
 
-Our group discovered this dataset on Kaggle.com as part of a competition which ended on March 1st of 2017. The submissions of this competition ``are evaluated on Root-Mean-Squared Error (RMSE) between the  logarithm of the predicted value and the logarithm of the observed sales price." Two datasets are provided: the training dataset has 1460 observations and the testing dataset has 1459 observations. The public leaderboard shows the least RMSE to be 0.06628.
+
+Our group discovered this dataset on Kaggle.com as part of a competition which ended on March 1st of 2017 [@kaggle]. The submissions of this competition ``are evaluated on Root-Mean-Squared Error (RMSE) between the  logarithm of the predicted value and the logarithm of the observed sales price." Two datasets are provided: the training dataset has 1460 observations and the testing dataset has 1459 observations. The public leaderboard shows the least RMSE to be 0.06628.
 
 We will now do a preliminary exploration of the data. 
 
@@ -79,7 +81,6 @@ mtext("Histogram of Sales Price per Year", outer = TRUE, cex = 1.5)
 
 
 
-
 # Project Objectives and Questions
 Our project objectives are to address the following questions. 
 
@@ -106,35 +107,18 @@ We will restrict our dataset to only 1-story/2-story homes and test our model us
 
 
 
-# External Sources pertaining to the Dataset
-Data Documentation 
-
-http://www.amstat.org/publications/jse/v19n3/decock/DataDocumentation.txt
-
-Kaggle Competition
-House Prices: Advanced Regression Techniques
-
-https://www.kaggle.com/c/house-prices-advanced-regression-techniques
-
-Data 
-
-http://www.amstat.org/publications/jse/v19n3/decock/AmesHousing.xls
-
-Map of residential assessment neighborhoods
-
-https://ww2.amstat.org/publications/jse/v19n3/decock/AmesResidential.pdf
+```{r, include = FALSE}
+# Map of residential assessment neighborhoods
+# https://ww2.amstat.org/publications/jse/v19n3/decock/AmesResidential.pdf
 
 
-# Requirements for the proposal
-Just to keep in mind, these are the requirements for the proposal
+# Data Documentation 
+# http://www.amstat.org/publications/jse/v19n3/decock/DataDocumentation.txt
 
-- 2 pages long 
 
-- project description 
-
-- How and where you obtained the data 
-
-- Questions you may want to address using the data and corresponding data minig & statistical learning methods
+# Data 
+# http://www.amstat.org/publications/jse/v19n3/decock/AmesHousing.xls
+```
 
 ---
 references:
@@ -146,5 +130,10 @@ references:
 - id: cock 
   title: Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project
   author: Dean De Cock
-  URL: https://ww2.amstat.org/publications/jse/v19n3/decock.pdf
+  URL: 'https://ww2.amstat.org/publications/jse/v19n3/decock.pdf'
+  
+- id: kaggle
+  title: House Prices: Advanced Regression Techniques
+  author: Kaggle
+  URL: 'https://www.kaggle.com/c/house-prices-advanced-regression-techniques'
 ---
