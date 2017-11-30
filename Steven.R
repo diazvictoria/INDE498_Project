@@ -1,5 +1,8 @@
 library(dplyr)
 library(randomForest)
+library(corrplot)
+library(MASS)
+library(car)
 
 setwd("D:\\Program File\\Git\\git_projects\\INDE 498\\INDE498_Project")
 
@@ -256,8 +259,43 @@ rm(test)
 rm(train)
 
 #Models
-rf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= 24, nodesize= 50)
-lm.realistic.pre <- lm(SalePrice~., data=train.precrash)
+#Pre
+#Checking for multicollinearity
+#Tons of correlated variables
+corrplot(cor(train.precrash[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
+
+#Transform to log
+boxcox(SalePrice~., data=train.precrash)
+
+#Alias variables need to remove one
+lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
+train.precrash <- train.precrash %>% filter(HouseStyle != "1.5Unf")
+lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
+#Removing highly correlated variables, the rest are categorical variables
+vif(lm.realistic.pre) > 10
+
+#Remove multicolinear vars
+train.precrash <- train.precrash %>% dplyr::select(-YearRemodAdd, -GarageCars)
+
+#Heating and Fence not significant
+lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
+
+alrf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= 24, nodesize= 50)
+
+#Post
+#Checking for multicollinearity
+corrplot(cor(train.postcrash[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
+
+#Transform to log
+boxcox(SalePrice~., data=train.precrash)
+
+lm.realistic.post <- lm(log(SalePrice)~., data=train.postcrash)
+vif(lm.realistic.post) > 10
+
+#Remove multicolinear vars
+train.postcrash <- train.postcrash %>% dplyr::select(-YearRemodAdd, -GarageCars)
+
+#Deck, Fence, GarageType, RoofMatl not sig
+lm.realistic.post <- lm(log(SalePrice)~., data=train.postcrash)
 
 rf.realistic.post <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE, mtry= 24, nodesize= 50)
-lm.realistic.post <- lm(SalePrice~., data=train.postcrash)
