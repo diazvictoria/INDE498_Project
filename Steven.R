@@ -84,11 +84,40 @@ train <- train %>% select(MSSubClass, GrLivArea, Street, Neighborhood, HouseStyl
                           Fence, YrSold, SalePrice) %>%
   mutate(NumFullBath = FullBath+BsmtFullBath, NumHalfBath = HalfBath+BsmtHalfBath, Deck = ifelse(WoodDeckSF > 0, 1, 0), 
         Porch = ifelse(OpenPorchSF+EnclosedPorch>0,1,0), Fence = ifelse(Fence=="none",0,1)) %>%
-  select(-FullBath, -BsmtFullBath, -HalfBath, -BsmtHalfBath, -WoodDeckSF, -OpenPorchSF, -EnclosedPorch)
+  select(-FullBath, -BsmtFullBath, -HalfBath, -BsmtHalfBath, -WoodDeckSF, -OpenPorchSF, -EnclosedPorch, -Street, -Utilities)
 
 #Coercing proper data type
 train$MSSubClass <- factor(train$MSSubClass)
 train$OverallCond <- factor(train$OverallCond)
+train$Fence <- factor(train$Fence)
+train$Deck <- factor(train$Deck)
+train$Porch <- factor(train$Porch)
+
+#Removing rare factors
+train <- train %>% group_by(MSSubClass) %>% filter(n() >= 6) %>% 
+  group_by(HouseStyle) %>% filter(n() >= 6) %>%
+  group_by(RoofMatl) %>% filter(n() >= 6) %>%
+  group_by(Exterior1st) %>% filter(n() >= 6) %>%
+  group_by(OverallCond) %>% filter(n() >= 6) %>%
+  group_by(Foundation) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType1) %>% filter(n() >= 6) %>%
+  group_by(GarageType) %>% filter(n() >= 6) %>%
+  group_by(CentralAir) %>% filter(n() >= 6) %>%
+  group_by(Heating) %>% filter(n() >= 6) %>%
+  group_by(Fence) %>% filter(n() >= 6) %>%
+  group_by(Deck) %>% filter(n() >= 6) %>%
+  group_by(Porch) %>% filter(n() >= 6)
+
+train$MSSubClass <- factor(train$MSSubClass)
+train$HouseStyle <- factor(train$HouseStyle)
+train$RoofMatl <- factor(train$RoofMatl)
+train$Exterior1st <- factor(train$Exterior1st)
+train$OverallCond <- factor(train$OverallCond)
+train$Foundation <- factor(train$Foundation)
+train$BsmtFinType1 <- factor(train$BsmtFinType1)
+train$GarageType <- factor(train$GarageType)
+train$CentralAir <- factor(train$CentralAir)
+train$Heating <- factor(train$Heating)
 train$Fence <- factor(train$Fence)
 train$Deck <- factor(train$Deck)
 train$Porch <- factor(train$Porch)
@@ -168,17 +197,47 @@ test$LotFrontage[is.na(test$LotFrontage)] <- 0
 test <- test %>% filter(!is.na(Electrical) & !is.na(GarageYrBlt))
 
 #Keeping only needed columns and adding binary variables for certain features
+#Removing street because precrash only has 1 gravel, utilities only have 1 level
 test <- test %>% select(MSSubClass, GrLivArea, Street, Neighborhood, HouseStyle, LotArea, YearBuilt, YearRemodAdd, Utilities, RoofMatl, Exterior1st,
                           OverallCond, Foundation, BsmtFinType1, FullBath, BsmtFullBath, HalfBath, BsmtHalfBath, Fireplaces, 
                           GarageType, GarageCars, GarageArea, CentralAir, Heating, TotalBsmtSF, WoodDeckSF, OpenPorchSF, EnclosedPorch,
                           Fence, YrSold) %>%
   mutate(NumFullBath = FullBath+BsmtFullBath, NumHalfBath = HalfBath+BsmtHalfBath, Deck = ifelse(WoodDeckSF > 0, 1, 0), 
          Porch = ifelse(OpenPorchSF+EnclosedPorch>0,1,0), Fence = ifelse(Fence=="none",0,1)) %>%
-  select(-FullBath, -BsmtFullBath, -HalfBath, -BsmtHalfBath, -WoodDeckSF, -OpenPorchSF, -EnclosedPorch)
+  select(-FullBath, -BsmtFullBath, -HalfBath, -BsmtHalfBath, -WoodDeckSF, -OpenPorchSF, -EnclosedPorch, -Street, -Utilities)
 
 #Coercing proper data type
 test$MSSubClass <- factor(test$MSSubClass)
 test$OverallCond <- factor(test$OverallCond)
+test$Fence <- factor(test$Fence)
+test$Deck <- factor(test$Deck)
+test$Porch <- factor(test$Porch)
+
+#Removing rare factor levels
+test <- test %>% group_by(MSSubClass) %>% filter(n() >= 6) %>% 
+  group_by(HouseStyle) %>% filter(n() >= 6) %>%
+  group_by(RoofMatl) %>% filter(n() >= 6) %>%
+  group_by(Exterior1st) %>% filter(n() >= 6) %>%
+  group_by(OverallCond) %>% filter(n() >= 6) %>%
+  group_by(Foundation) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType1) %>% filter(n() >= 6) %>%
+  group_by(GarageType) %>% filter(n() >= 6) %>%
+  group_by(CentralAir) %>% filter(n() >= 6) %>%
+  group_by(Heating) %>% filter(n() >= 6) %>%
+  group_by(Fence) %>% filter(n() >= 6) %>%
+  group_by(Deck) %>% filter(n() >= 6) %>%
+  group_by(Porch) %>% filter(n() >= 6)
+
+test$MSSubClass <- factor(test$MSSubClass)
+test$HouseStyle <- factor(test$HouseStyle)
+test$RoofMatl <- factor(test$RoofMatl)
+test$Exterior1st <- factor(test$Exterior1st)
+test$OverallCond <- factor(test$OverallCond)
+test$Foundation <- factor(test$Foundation)
+test$BsmtFinType1 <- factor(test$BsmtFinType1)
+test$GarageType <- factor(test$GarageType)
+test$CentralAir <- factor(test$CentralAir)
+test$Heating <- factor(test$Heating)
 test$Fence <- factor(test$Fence)
 test$Deck <- factor(test$Deck)
 test$Porch <- factor(test$Porch)
@@ -189,13 +248,16 @@ test.postcrash <- test %>% filter(YrSold > 2007)
 test.precrash <- test.precrash %>% select(-YrSold)
 test.postcrash <- test.postcrash %>% select(-YrSold)
 
+train.precrash$Neighborhood <- factor(train.precrash$Neighborhood)
+train.precrash$Exterior1st <- factor(train.precrash$Exterior1st)
+
 #Remove unneeded vairables
 rm(test)
 rm(train)
 
 #Models
-rf.realistic <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE)
-lm.realistic <- lm(SalePrice~., data=train.precrash)
+rf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= 24, nodesize= 50)
+lm.realistic.pre <- lm(SalePrice~., data=train.precrash)
 
-rf.realistic <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE)
-lm.realistic <- lm(SalePrice~., data=train.postcrash)
+rf.realistic.post <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE, mtry= 24, nodesize= 50)
+lm.realistic.post <- lm(SalePrice~., data=train.postcrash)
