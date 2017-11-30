@@ -1,0 +1,176 @@
+---
+title: "INDE498_Project_Q1"
+author: "Victoria Diaz"
+output:
+    html_document: 
+     smart: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**How much should I offer for a house? (full model with variables)**
+
+# Prep the data
+```{r}
+# load the training data 
+data <- read.csv("train.csv")
+
+# make sure that our outcome variable is of type numeric 
+data[ , dim(data)[2]] <- as.numeric(data[ , dim(data)[2]])
+```
+
+
+# Understanding the data 
+There are missing values. Let's decide what to do with them.
+
+We print out all the variables that have missing values. The only predictor that has unjustified missing values is "Electrical" since every house will have electricity. (?) Anyways, there is only one house that does has an NA value for "Electrical". We will throw away this data point.
+```{r}
+# create a data frame that returns the number of NA values in each column
+df <- data.frame(column = c(-1), is_na = c(-1))
+for (i in c(1:79)){ 
+  df <- rbind(df, c(i, sum(is.na(data[, i])))) 
+}
+df <- df[c(-1), ]
+
+# print the names of the factors with NA values
+# The only factors that have NA values are columns 4, 7, 26, 27, 31, 32, 33, 34, 36, 43, 58, 59, 60, 61, 64, 65, 73, 74, 75
+# save these factors in a vector: na_pred
+na_pred <-c()
+for (i in c(4, 7, 26, 27, 31, 32, 33, 34, 36, 43, 58, 59, 60, 61, 64, 65, 73, 74, 75)){ 
+  print(c(i, names(data)[i]))
+  na_pred <- c(na_pred, names(data)[i])
+}
+
+# get rid of the data point with "Electrical" = NA 
+data <- data[-c(43), ]
+```
+
+Let's make all of the appropriate NA values into 0. 
+Let's make all of the appropriate NA values into a factor. 
+```{r}
+# make a vector of predictors with NA values which need to be converted to 0 
+na_pred_0 <- na_pred[c(1, 4)]
+
+# make a vector of predictors with NA values which need to be converted to a factor
+na_pred_na <- na_pred[c(2, 3, 5, 6, 7, 8, 9, 11, 12, 14, 15, 16, 17, 18, 19)]
+
+# I am not sure what to do with "GarageYrBlt"; I didn't do anything with "Electricity" because I already removed that one
+
+# This corresponds to "LotFrontage". The NA values should be 0. 
+for (i in c(1:dim(data)[1])){ 
+  if (is.na(data[i, ]$LotFrontage)){
+    data[i, ]$LotFrontage <- 0
+    }
+}
+
+# This corresponds to "MasVnrArea". The NA values should be 0. 
+for (i in c(1:dim(data)[1])){ 
+  if (is.na(data[i, ]$MasVnrArea)){
+    data[i, ]$MasVnrArea <- 0
+    }
+}
+
+## IGNORE THIS PART
+# This corresponds to "Alley". The NA values should be "NA". 
+# check the levels
+# levels(data$Alley)
+# 
+# # add "NA" as a level
+# data$Alley <- factor(data$Alley, levels = c(levels(data$Alley), "NA"))
+# 
+# # convert all NA's to "NA"'s
+# data$Alley[is.na(data$Alley)] = "NA"
+
+
+# This corresponds to elements in na_pred_na. The NA values should be "NA".
+for (col in na_pred_na){ 
+  # add "NA" as a level
+ data[[col]] <- factor(data[[col]], levels = c(levels(data[[col]]), "NA"))
+ 
+ # convert all NA's to "NA"'s
+ data[[col]][is.na(data[[col]])] = "NA"
+}
+```
+
+
+Code from online -- not needed
+```{r}
+######### From StackExchange ###########
+# #check levels
+# levels(data$LotFrontage)
+# #[1] "3"  "4"  "7"  "9"  "10"
+# 
+# #add new factor level. i.e 88 in our example
+# df$a = factor(df$a, levels=c(levels(df$a), 88))
+# 
+# #convert all NA's to 88
+# df$a[is.na(df$a)] = 88
+# 
+# #check levels again
+# levels(df$a)
+# #[1] "3"  "4"  "7"  "9"  "10" "88"
+```
+
+We need to make sure that all the classification predictors are "factors" in R. 
+```{r} 
+# checking to make sure these are factors
+typeof(data$MSZoning)
+typeof(as.factor(data$MSZoning))
+  
+# checking to make sure this is a continuous variable
+typeof(data$LotArea)
+```
+
+Let's look at a summary of our data. We notice that "Utilities" has two different values. However, it only takes on the factor "NoSeWa" 1 time versus taking on "AllPub" 1458 times. 
+```{r} 
+summary(data)
+```
+
+Let's look at data.train. We see that "Utilities" only takes on the value "AllPub". We need to get rid of this predictor in order to run a linear regression. 
+```{r} 
+summary(data.train)
+
+# removing the predictor "Utilities" 
+# colnames(data.train)[10]=="Utilities" # TRUE
+# data.train <- data.train[ , -c(10)]
+```
+
+```{r}
+# create a training data (half the original data size)
+set.seed(1)
+train.ix <- sample(nrow(data),floor( nrow(data)/2) )
+data.train <- data[train.ix,]
+
+# create a testing data (half the original data size)
+data.test <- data[-train.ix,]
+```
+
+
+
+# Linear Regression 
+```{r}
+# this gives me an error 
+linear_regr <- lm( SalePrice ~ ., data = data.train)
+summary(linear_regr)
+```
+
+
+
+# Random Forest
+```{r}
+# Use randomForest() function to build a RF model with all predictors
+library(randomForest)
+rf.AD <- randomForest( SalePrice ~ ., data = data.train, ntree = 100, nodesize = 20, mtry = 5) 
+```
+
+
+# LASSO and Linear Regression 
+
+
+
+# LASSO and Random Forest
+
+
+
