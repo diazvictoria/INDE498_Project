@@ -1,0 +1,397 @@
+---
+title: "INDE498_Project_Q1"
+author: "Victoria Diaz"
+output:
+    html_document: 
+     smart: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Clean the data
+```{r}
+library(dplyr)
+library(randomForest)
+library(corrplot)
+library(MASS)
+library(car)
+library(caret)
+
+setwd("/Users/vdiaz/Documents/GitHub/INDE498_Project/")
+
+train <- read.csv("train.csv")
+
+# finding the dimension of our datasets
+dim(train) 
+
+#Data cleaning for train
+train$Alley <- as.character(train$Alley)
+train$Alley[is.na(train$Alley)] <- "none"
+train$Alley <- as.factor(train$Alley)
+
+train$MasVnrType <- as.character(train$MasVnrType)
+train$MasVnrType[is.na(train$MasVnrType)] <- "none"
+train$MasVnrType <- as.factor(train$MasVnrType)
+
+train$MasVnrArea[is.na(train$MasVnrArea)] <- 0
+
+train$BsmtQual <- as.character(train$BsmtQual)
+train$BsmtQual[is.na(train$BsmtQual)] <- "none"
+train$BsmtQual <- as.factor(train$BsmtQual)
+
+train$BsmtCond <- as.character(train$BsmtCond)
+train$BsmtCond[is.na(train$BsmtCond)] <- "none"
+train$BsmtCond <- as.factor(train$BsmtCond)
+
+train$BsmtExposure <- as.character(train$BsmtExposure)
+train$BsmtExposure[is.na(train$BsmtExposure)] <- "none"
+train$BsmtExposure <- as.factor(train$BsmtExposure)
+
+train$BsmtFinType1 <- as.character(train$BsmtFinType1)
+train$BsmtFinType1[is.na(train$BsmtFinType1)] <- "none"
+train$BsmtFinType1 <- as.factor(train$BsmtFinType1)
+
+train$BsmtFinType2 <- as.character(train$BsmtFinType2)
+train$BsmtFinType2[is.na(train$BsmtFinType2)] <- "none"
+train$BsmtFinType2 <- as.factor(train$BsmtFinType2)
+
+train$FireplaceQu <- as.character(train$FireplaceQu)
+train$FireplaceQu[is.na(train$FireplaceQu)] <- "none"
+train$FireplaceQu <- as.factor(train$FireplaceQu)
+
+train$GarageType <- as.character(train$GarageType)
+train$GarageType[is.na(train$GarageType)] <- "none"
+train$GarageType <- as.factor(train$GarageType)
+
+train$GarageFinish <- as.character(train$GarageFinish)
+train$GarageFinish[is.na(train$GarageFinish)] <- "none"
+train$GarageFinish <- as.factor(train$GarageFinish)
+
+train$GarageQual <- as.character(train$GarageQual)
+train$GarageQual[is.na(train$GarageQual)] <- "none"
+train$GarageQual <- as.factor(train$GarageQual)
+
+train$GarageCond <- as.character(train$GarageCond)
+train$GarageCond[is.na(train$GarageCond)] <- "none"
+train$GarageCond <- as.factor(train$GarageCond)
+
+train$PoolQC <- as.character(train$PoolQC)
+train$PoolQC[is.na(train$PoolQC)] <- "none"
+train$PoolQC <- as.factor(train$PoolQC)
+
+train$Fence <- as.character(train$Fence)
+train$Fence[is.na(train$Fence)] <- "none"
+train$Fence <- as.factor(train$Fence)
+
+train$MiscFeature <- as.character(train$MiscFeature)
+train$MiscFeature[is.na(train$MiscFeature)] <- "none"
+train$MiscFeature <- as.factor(train$MiscFeature)
+
+train$LotFrontage[is.na(train$LotFrontage)] <- 0
+
+train <- train %>% filter(!is.na(Electrical) & !is.na(GarageYrBlt))
+
+#Removing rare factors
+train <- train %>% group_by(MSSubClass) %>% filter(n() >= 6) %>% 
+  group_by(MSZoning) %>% filter(n() >= 6) %>%
+  group_by(Alley) %>% filter(n() >= 6) %>%
+  group_by(LotShape) %>% filter(n() >= 6) %>%
+  group_by(LandContour) %>% filter(n() >= 6) %>%
+  group_by(LotConfig) %>% filter(n() >= 6) %>%
+  group_by(Neighborhood) %>% filter(n() >= 6) %>%
+  group_by(Condition1) %>% filter(n() >= 6) %>%
+  group_by(Condition2) %>% filter(n() >= 6) %>%
+  group_by(BldgType) %>% filter(n() >= 6) %>%
+  group_by(HouseStyle) %>% filter(n() >= 6) %>%
+  group_by(OverallQual) %>% filter(n() >= 6) %>%
+  group_by(OverallCond) %>% filter(n() >= 6) %>%
+  group_by(RoofStyle) %>% filter(n() >= 6) %>%
+  group_by(RoofMatl) %>% filter(n() >= 6) %>%
+  group_by(Exterior1st) %>% filter(n() >= 6) %>%
+  group_by(Exterior2nd) %>% filter(n() >= 6) %>%
+  group_by(MasVnrType) %>% filter(n() >= 6) %>%
+  group_by(ExterQual) %>% filter(n() >= 6) %>%
+  group_by(ExterCond) %>% filter(n() >= 6) %>%
+  group_by(Foundation) %>% filter(n() >= 6) %>%
+  group_by(BsmtQual) %>% filter(n() >= 6) %>%
+  group_by(BsmtCond) %>% filter(n() >= 6) %>%
+  group_by(BsmtExposure) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType1) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType2) %>% filter(n() >= 6) %>%
+  group_by(Heating) %>% filter(n() >= 6) %>%
+  group_by(HeatingQC) %>% filter(n() >= 6) %>%
+  group_by(CentralAir) %>% filter(n() >= 6) %>%
+  group_by(KitchenQual) %>% filter(n() >= 6) %>%
+  group_by(Functional) %>% filter(n() >= 6) %>%
+  group_by(FireplaceQu) %>% filter(n() >= 6) %>%
+  group_by(GarageType) %>% filter(n() >= 6) %>%
+  group_by(GarageFinish) %>% filter(n() >= 6) %>%
+  group_by(GarageQual) %>% filter(n() >= 6) %>%
+  group_by(GarageCond) %>% filter(n() >= 6) %>%
+  group_by(PavedDrive) %>% filter(n() >= 6) %>%
+  group_by(PoolQC) %>% filter(n() >= 6) %>%
+  group_by(Fence) %>% filter(n() >= 6) %>%
+  group_by(SaleType) %>% filter(n() >= 6) %>%
+  group_by(SaleCondition) %>% filter(n() >= 6)
+
+
+train$MSSubClass <- factor(train$MSSubClass) 
+train$MSZoning <- factor(train$MSZoning)
+train$Alley <- factor(train$Alley)
+train$LotShape <- factor(train$LotShape)
+train$LandContour <- factor(train$LandContour)
+train$LotConfig <- factor(train$LotConfig)
+train$Neighborhood <- factor(train$Neighborhood)
+train$Condition1 <- factor(train$Condition1)
+train$Condition2 <- factor(train$Condition2)
+train$BldgType <- factor(train$BldgType)
+train$HouseStyle <- factor(train$HouseStyle)
+train$OverallQual <- factor(train$OverallQual)
+train$OverallCond <- factor(train$OverallCond)
+train$RoofStyle <- factor(train$RoofStyle)
+train$RoofMatl <- factor(train$RoofMatl)
+train$Exterior1st <- factor(train$Exterior1st)
+train$Exterior2nd <- factor(train$Exterior2nd)
+train$MasVnrType <- factor(train$MasVnrType)
+train$ExterQual <- factor(train$ExterQual)
+train$ExterCond <- factor(train$ExterCond)
+train$Foundation <- factor(train$Foundation)
+train$BsmtQual <- factor(train$BsmtQual)
+train$BsmtCond <- factor(train$BsmtCond)
+train$BsmtExposure <- factor(train$BsmtExposure)
+train$BsmtFinType1 <- factor(train$BsmtFinType1)
+train$BsmtFinType2 <- factor(train$BsmtFinType2)
+train$Heating <- factor(train$Heating)
+train$HeatingQC <- factor(train$HeatingQC)
+train$CentralAir <- factor(train$CentralAir)
+train$KitchenQual <- factor(train$KitchenQual)
+train$Functional <- factor(train$Functional)
+train$FireplaceQu <- factor(train$FireplaceQu)
+train$GarageType <- factor(train$GarageType)
+train$GarageFinish <- factor(train$GarageFinish)
+train$GarageQual <- factor(train$GarageQual)
+train$GarageCond <- factor(train$GarageCond)
+train$PavedDrive <- factor(train$PavedDrive)
+train$PoolQC <- factor(train$PoolQC)
+train$Fence <- factor(train$Fence)
+train$SaleType <- factor(train$SaleType)
+train$SaleCondition <- factor(train$SaleCondition)
+```
+
+
+# Define new datasets 
+```{r} 
+#Split data into 2006-2007 and 2008-2010
+train.precrash <- train %>% filter(YrSold <= 2007)
+train.postcrash <- train %>% filter(YrSold > 2007)
+
+train.precrash <- train.precrash %>% dplyr::select(-YrSold) 
+train.postcrash <- train.postcrash %>% dplyr::select(-YrSold) 
+```
+
+
+# Editing datasets: train.precrash
+```{r}
+summary(train.precrash)
+
+# Remove Street, Utilities, Condition2, RoofMatl, Heating, PoolQC because they don't have factors with large numbers in them
+train.precrash <- train.precrash %>% dplyr::select(-Street, -Utilities, -Condition2, -RoofMatl, -Heating, -PoolQC)
+
+# Pool Area is all 0; I am removing Pool Area
+train.precrash$PoolArea
+train.precrash <- train.precrash %>% dplyr::select(-PoolArea)
+```
+
+# Editing datasets: train.postcrash
+```{r}
+summary(train.postcrash)
+
+# Remove Street, Utilities, Condition2, Heating, PoolQC
+train.postcrash <- train.postcrash %>% dplyr::select(-Street, -Utilities, -Condition2, -Heating, -PoolQC)
+
+# Pool Area is all 0; I am removing Pool Area
+train.postcrash$PoolArea
+train.postcrash <- train.postcrash %>% dplyr::select(-PoolArea)
+
+```
+
+# train.precrash
+## Which predictors are the most important? -- Linear Regression
+### Checking the assumptions for linear regression: Multicollinearity
+```{r}
+# Creating a correlation plot
+corrplot(cor(train.prepost[, which(names(train.precrash) %in% c("YearBuilt", "YearRemodAdd", "MasVnrArea", "BsmtFinSF1", "BsmtFinDF2", "BsmtUnfSF", "TotalBsmtSF", "vX1stFlrSF", "X2ndFlrSF", "LowQualFinSF", "GrLivArea", "BsmtFullBath", "BsmtHalfBath", "FullBath", "HalfBath", "BedroomAbvGr", "KitchenAbvGr", "TotRmsAbvGrd", "Fireplaces", "GarageYrBlt", "GarageCars", "GarageArea", "WoodDeckSF", "OpenPorchSF", "EnclosedPorch", "X3SsnPorch", "ScreenPorch", "MiscVal", "MoSold" ))]), type = "upper")
+
+# Reducing the correlation plot -- making it easier to view
+corrplot(cor(train.precrash[, which(names(train.precrash) %in% c("YearBuilt", "YearRemodAdd", "MasVnrArea", "BsmtFinSF1", "BsmtFinDF2", "BsmtUnfSF", "TotalBsmtSF", "vX1stFlrSF", "X2ndFlrSF", "LowQualFinSF", "GrLivArea", "BsmtFullBath", "BsmtHalfBath", "FullBath", "HalfBath", "BedroomAbvGr", "KitchenAbvGr", "TotRmsAbvGrd", "Fireplaces", "GarageYrBlt", "GarageCars", "GarageArea"))]), type = "upper")
+
+# We notice that the following variables are the most highly correlated: YearBuilt with GarageYrBlt and GrLivArea with TotRmsAbvGrd. The following variables are also highly correlated: X2ndFlrSF with GrLivArea, BsmtFinSF1 with BsmtFullBath, X2ndFlrSF with HalfBath, BedroomAbvGr with TotRmsAbvGrd, etc.
+# For now, we will remove GarageYrBlt and keep the rest of the variables. 
+train.precrash <- train.precrash %>% dplyr::select(-GarageYrBlt)
+```
+
+# train.precrash
+## Checking the assumptions for linear regression: Normality
+```{r}
+# Transform to log 
+# Since lambda is centered around 0, we need to take the log transformation of SalePrice when applying linear regression
+boxcox(SalePrice ~., data=train.precrash)
+```
+
+# train.precrash
+## Checking the assumptions for linear regression: Multicollinearity
+We check the collinearity of our variables under the log transformation
+```{r}
+# Fit a linear model 
+lm.total.pre <- lm(log(SalePrice)~., data=train.precrash)
+
+# Check the alias of lm.total.pre
+# We see that the following variables yield 1: 
+# HouseStyle2.5Unf with Intercept
+# HouseStyle2.5Unf with MSSubClass75
+# BldgType2fmCon with MSSubClass190
+# BldgTypeDuplex  with MSSubClass90
+# BsmtQualnone with BsmtCondnone
+# BsmtQualnone with BsmtFinType1none
+# BsmtQualnone with BsmtFinType2none
+# TotalBsmtSF with BsmtFinSF1
+# TotalBsmtSF with BsmtFinSF2 
+# TotalBsmtSF with BsmtUnfSF
+# GrLivArea  with X1stFlrSF 
+# GrLivArea  with X2ndFlrSF 
+# GrLivArea  with LowQualFinSF
+# SaleConditionPartial with SaleTypeNew 
+
+# We see that the following variables yield -1: 
+# MSZoningFV with HouseStyle2.5Unf 
+# HouseStyle2.5Unf  with MSZoningRH 
+# HouseStyle2.5Unf with MSZoningRL
+# HouseStyle2.5Unf with MSZoningRM
+# HouseStyle2.5Fin with HouseStyle2.5Unf
+alias(lm.total.pre)
+
+# Since HouseStyle2.5Unf shows up a lot, we will remove it (this takes care of all the -1s and some 1s)
+train.precrash <- train.precrash %>% filter(HouseStyle != "2.5Unf")
+
+# We remove GrLivArea (it isn't a big issue since we will keep 1stFlrSF and 2ndFlrSF)
+train.precrash <- train.precrash %>% dplyr::select(- GrLivArea)
+
+# We remove TotalBsmtSF (it isn't a big issue since we will keep BsmtUnfSF, BsmtFinSF1, BsmtFinSF2)
+train.precrash <- train.precrash %>% dplyr::select(- TotalBsmtSF)
+
+# We remove BldgTypeDuplex and BldgType2fmCon
+train.precrash <- train.precrash %>% filter(BldgType != "Duplex")
+train.precrash <- train.precrash %>% filter(BldgType != "2fmCon")
+
+# We remove BsmtQualnone
+train.precrash <- train.precrash %>% filter(BsmtQual != "none")
+
+# We remove SaleConditionPartial
+train.precrash <- train.precrash %>% filter(SaleCondition != "Partial")
+
+# we apply linear regression again
+lm.total.pre <- lm(log(SalePrice)~., data=train.precrash)
+
+# We check the alias function 
+# We see that the following variables yield 1: 
+# MSSubClass30 with HouseStyle1.5Unf
+# KitchenAbvGr with Intercept
+# HouseStyle2.5Fin with MSSubClass75
+alias(lm.total.pre)
+
+# We remove MSSubClass30, MSSubClass75, and KitchenAbvGr
+train.precrash <- train.precrash %>% filter(MSSubClass != 30)
+train.precrash <- train.precrash %>% filter(MSSubClass != 75)
+train.precrash <- train.precrash %>% dplyr::select(-KitchenAbvGr)
+
+# we apply linear regression again
+lm.total.pre <- lm(log(SalePrice)~., data=train.precrash)
+
+# We check the alias function 
+# We see that the following variables yield 1: 
+# HouseStyle1.5Unf with MSSubClass45
+alias(lm.total.pre)
+
+# We remove HouseStyle1.5Unf
+train.precrash <- train.precrash %>% filter(HouseStyle !="1.5Unf")
+
+# we apply linear regression again
+lm.total.pre <- lm(log(SalePrice)~., data=train.precrash)
+
+# We remove highly correlated variables, the rest are categorical variables
+vif(lm.total.pre) > 10
+```
+
+# train.precrash
+## Analyzing our linear regression model 
+```{r}
+# We print a summary of our final linear regression model 
+summary(lm.total.pre)
+
+## p-value less than 0.001
+# list all the variables whose p value is less that 0.001
+lm.total.pre.001 <- subset(summary(lm.total.pre)$coefficients, summary(lm.total.pre)$coefficients[,4] < 0.001)
+
+# print out all of these predictors in order of least to greatest p-value
+pred.names.001 <- lm.total.pre.001[order(lm.total.pre.001[,4]), 4]
+
+# print the amount of these predictors
+dim(lm.total.pre.001)[1]
+
+
+## p-value between 0.001 and 0.01
+# list all the variables whose p value is between 0.001 and 0.01
+lm.total.pre.01 <- subset(summary(lm.total.pre)$coefficients, summary(lm.total.pre)$coefficients[,4] < 0.01 & summary(lm.total.pre)$coefficients[,4] >= 0.001)
+
+# print out all of these predictors in order of least to greatest p-value
+pred.names.01 <- lm.total.pre.01[order(lm.total.pre.01[,4]), 4]
+
+# print the amount of these predictors
+dim(lm.total.pre.01)[1]
+
+
+## p-value between 0.01 and 0.05
+# list all the variables whose p value is between 0.01 and 0.05
+lm.total.pre.05 <- subset(summary(lm.total.pre)$coefficients, (summary(lm.total.pre)$coefficients[,4] < 0.05 & summary(lm.total.pre)$coefficients[,4] >= 0.01))
+
+# print out all of these predictors in order of least to greatest p-value
+pred.names.05 <- lm.total.pre.05[order(lm.total.pre.05[,4]), 4]
+
+# print the amount of these predictors
+dim(lm.total.pre.05)[1]
+
+# create a dataframe summarizing our results 
+lm.total.pre.df <- data.frame(c(dim(lm.total.pre.001)[1]), c(dim(lm.total.pre.01)[1]), c(dim(lm.total.pre.05)[1]))
+
+colnames(lm.total.pre.df) <- c("p-value < 0.001", "0.001 <= p-value < 0.01", "0.01 <= p-value < 0.05") 
+rownames(lm.total.pre.df) <- "number of predictors"
+lm.total.pre.df
+```
+
+
+# train.precrash 
+## Visualizing our linear regression model 
+```{r}
+# http://myweb.uiowa.edu/pbreheny/publications/visreg.pdf
+
+library(visreg)
+visreg(lm.total.pre)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
