@@ -182,6 +182,8 @@ train$SaleCondition <- factor(train$SaleCondition)
 ```
 
 
+
+
 # Define new datasets 
 ```{r} 
 #Split data into 2006-2007 and 2008-2010
@@ -191,6 +193,8 @@ train.postcrash <- train %>% filter(YrSold > 2007)
 train.precrash <- train.precrash %>% dplyr::select(-YrSold) 
 train.postcrash <- train.postcrash %>% dplyr::select(-YrSold) 
 ```
+
+
 
 
 # Editing datasets: train.precrash
@@ -205,6 +209,8 @@ train.precrash$PoolArea
 train.precrash <- train.precrash %>% dplyr::select(-PoolArea)
 ```
 
+
+
 # Editing datasets: train.postcrash
 ```{r}
 summary(train.postcrash)
@@ -217,6 +223,8 @@ train.postcrash$PoolArea
 train.postcrash <- train.postcrash %>% dplyr::select(-PoolArea)
 
 ```
+
+
 
 # train.precrash
 ## Which predictors are the most important? -- Linear Regression
@@ -233,6 +241,7 @@ corrplot(cor(train.precrash[, which(names(train.precrash) %in% c("YearBuilt", "Y
 train.precrash <- train.precrash %>% dplyr::select(-GarageYrBlt)
 ```
 
+
 # train.precrash
 ## Checking the assumptions for linear regression: Normality
 ```{r}
@@ -240,6 +249,8 @@ train.precrash <- train.precrash %>% dplyr::select(-GarageYrBlt)
 # Since lambda is centered around 0, we need to take the log transformation of SalePrice when applying linear regression
 boxcox(SalePrice ~., data=train.precrash)
 ```
+
+
 
 # train.precrash
 ## Checking the assumptions for linear regression: Multicollinearity
@@ -325,6 +336,10 @@ lm.total.pre <- lm(log(SalePrice)~., data=train.precrash)
 vif(lm.total.pre) > 10
 ```
 
+
+
+
+
 # train.precrash
 ## Analyzing our linear regression model 
 ```{r}
@@ -372,6 +387,8 @@ lm.total.pre.df
 ```
 
 
+
+
 # train.precrash 
 ## Visualizing our linear regression model 
 ```{r}
@@ -382,6 +399,179 @@ visreg(lm.total.pre)
 ```
 
 
+
+
+
+
+# train.postcrash
+## Which predictors are the most important? -- Linear Regression
+### Checking the assumptions for linear regression: Multicollinearity
+```{r}
+# Creating a correlation plot
+corrplot(cor(train.postcrash[, which(names(train.postcrash) %in% c("YearBuilt", "YearRemodAdd", "MasVnrArea", "BsmtFinSF1", "BsmtFinDF2", "BsmtUnfSF", "TotalBsmtSF", "vX1stFlrSF", "X2ndFlrSF", "LowQualFinSF", "GrLivArea", "BsmtFullBath", "BsmtHalfBath", "FullBath", "HalfBath", "BedroomAbvGr", "KitchenAbvGr", "TotRmsAbvGrd", "Fireplaces", "GarageYrBlt", "GarageCars", "GarageArea", "WoodDeckSF", "OpenPorchSF", "EnclosedPorch", "X3SsnPorch", "ScreenPorch", "MiscVal", "MoSold" ))]), type = "upper")
+
+# Reducing the correlation plot -- making it easier to view
+corrplot(cor(train.postcrash[, which(names(train.postcrash) %in% c("YearBuilt", "YearRemodAdd", "MasVnrArea", "BsmtFinSF1", "BsmtFinDF2", "BsmtUnfSF", "TotalBsmtSF", "vX1stFlrSF", "X2ndFlrSF", "LowQualFinSF", "GrLivArea", "BsmtFullBath", "BsmtHalfBath", "FullBath", "HalfBath", "BedroomAbvGr", "KitchenAbvGr", "TotRmsAbvGrd", "Fireplaces", "GarageYrBlt", "GarageCars", "GarageArea"))]), type = "upper")
+
+# We notice that the following variables are the most highly correlated: YearBuilt with GarageYrBlt and GrLivArea with TotRmsAbvGrd.
+
+# For now, we will remove GarageYrBlt and keep the rest of the variables. 
+train.postcrash <- train.postcrash %>% dplyr::select(-GarageYrBlt)
+```
+
+
+
+# train.postcrash
+## Checking the assumptions for linear regression: Normality
+```{r}
+# Transform to log 
+# Since lambda is centered around 0, we need to take the log transformation of SalePrice when applying linear regression
+boxcox(SalePrice ~., data=train.postcrash)
+```
+
+
+
+# train.postcrash
+## Checking the assumptions for linear regression: Multicollinearity
+We check the collinearity of our variables under the log transformation
+```{r}
+# Fit a linear model 
+lm.total.post <- lm(log(SalePrice)~., data=train.postcrash)
+
+# Check the alias of lm.total.pre
+# We see that the following variables yield 1: 
+# MSSubClass45 with HouseStyle1.5Unf
+# MSSubClass90 with BldgTypeDuplex 
+# MSSubClass190 with BldgType2fmCon
+# BsmtQualnone with BsmtCondnone    
+# BsmtQualnone with BsmtExposurenone   
+# BsmtQualnone with BsmtFinType1none
+# TotalBsmtSF with BsmtFinSF1
+# TotalBsmtSF with BsmtFinSF2
+# TotalBsmtSF with BsmtUnfSF
+# GrLivArea with X1stFlrSF
+# GrLivArea with X2ndFlrSF
+# GrLivArea with LowQualFinSF
+alias(lm.total.post)
+
+# We remove GrLivArea and TotalBsmtSF
+train.postcrash <- train.postcrash %>% dplyr::select(- GrLivArea, -TotalBsmtSF)
+
+# We remove BsmtQualnone, HouseStyle1.5Unf, MSSubClass90, and MSSubClass190
+train.postcrash <- train.postcrash %>% filter(BsmtQual != "none")
+train.postcrash <- train.postcrash %>% filter(HouseStyle != "1.5Unf")
+train.postcrash <- train.postcrash %>% filter(MSSubClass != "90")
+train.postcrash <- train.postcrash %>% filter(MSSubClass != "190")
+
+# we apply linear regression again
+lm.total.post <- lm(log(SalePrice)~., data=train.postcrash)
+
+# We check the alias function 
+# We see that the following variables yield 1: 
+# Exterior2ndWd Shng  with Exterior1stBrkFace 
+# Exterior2ndWd Shng with Exterior1stCemntBd 
+# Exterior2ndWd Shng with Exterior1stHdBoard
+# Exterior2ndWd Shng with Exterior1stMetalSd 
+# Exterior2ndWd Shng with Exterior1stPlywood 
+# Exterior2ndWd Shng with Exterior1stStucco 
+# Exterior2ndWd Shng with Exterior1stVinylSd
+# Exterior2ndWd Shng with Exterior1stWd Sdng
+# Exterior2ndWd Shng with Exterior1stWdShing
+# TotalBsmtSF with BsmtFinSF1 ############# THESE SHOULDN'T BE HERE
+# TotalBsmtSF with BsmtFinSF2############# THESE SHOULDN'T BE HERE
+# TotalBsmtSF with BsmtUnfSF############# THESE SHOULDN'T BE HERE
+# GrLivArea  with X1stFlrSF ############# THESE SHOULDN'T BE HERE
+# GrLivArea  with X2ndFlrSF ############# THESE SHOULDN'T BE HERE
+# GrLivArea  with LowQualFinSF ############# THESE SHOULDN'T BE HERE
+
+# We see that the following variables yield -1:
+# Exterior2ndWd Shng with Exterior2ndBrkFace 
+# Exterior2ndWd Shng with Exterior2ndCmentBd
+# Exterior2ndWd Shng with Exterior2ndHdBoard 
+# Exterior2ndWd Shng with Exterior2ndImStucc
+# Exterior2ndWd Shng with Exterior2ndMetalSd 
+# Exterior2ndWd Shng with Exterior2ndPlywood
+# Exterior2ndWd Shng with Exterior2ndStucco 
+# Exterior2ndWd Shng with Exterior2ndVinylSd 
+# Exterior2ndWd Shng with Exterior2ndWd
+alias(lm.total.post)
+
+# We remove Exterior2ndWd Shng
+train.postcrash <- train.postcrash %>% filter(Exterior2nd != "Wd Shng")
+
+# we apply linear regression again
+lm.total.post <- lm(log(SalePrice)~., data=train.postcrash)
+
+# We check the alias function 
+# We see that the following variables yield 1: 
+# KitchenAbvGr  with Intercept 
+# BldgTypeTwnhsE  with MSSubClass120 
+# BldgTypeTwnhsE  with MSSubClass180 
+# Exterior2ndVinylSd with Exterior1stBrkFace 
+# Exterior2ndVinylSd with Exterior1stCemntBd
+# Exterior2ndVinylSd with Exterior1stHdBoard 
+# Exterior2ndVinylSd with Exterior1stMetalSd 
+# Exterior2ndVinylSd with Exterior1stPlywood 
+# Exterior2ndVinylSd with Exterior1stStucco
+# Exterior2ndVinylSd with Exterior1stVinylSd 
+# Exterior2ndVinylSd with Exterior1stWd Sdng 
+# Exterior2ndVinylSd with Exterior1stWdShing
+
+# We see that the following variables yield -1: 
+# MSSubClass60 with KitchenAbvGr  
+# MSSubClass70 with KitchenAbvGr  
+# KitchenAbvGr with MSSubClass75
+# KitchenAbvGr with MSSubClass160
+# Exterior2ndVinylSd with Exterior2ndBrkFace
+# Exterior2ndVinylSd with Exterior2ndCmentBd 
+# Exterior2ndVinylSd with Exterior2ndHdBoard 
+# Exterior2ndVinylSd with Exterior2ndImStucc 
+# Exterior2ndVinylSd with Exterior2ndMetalSd
+# Exterior2ndVinylSd with Exterior2ndPlywood 
+# Exterior2ndVinylSd with Exterior2ndStucco
+alias(lm.total.post)
+
+# We remove Exterior2ndVinylSd, BldgTypeTwnhsE, and KitchenAbvGr  
+train.postcrash <- train.postcrash %>% dplyr::select(- KitchenAbvGr)
+train.postcrash <- train.postcrash %>% filter(BldgType != "TwnhsE")
+train.postcrash <- train.postcrash %>% filter(Exterior2nd != "VinylSd")
+
+# we apply linear regression again
+lm.total.post <- lm(log(SalePrice)~., data=train.postcrash)
+
+# We check the alias function 
+alias(lm.total.post)
+
+# We remove BldgTypeTwnhs, Exterior2ndStucco, Exterior2ndPlywood, HouseStyle2Story, and NeighborhoodMeadowV 
+train.postcrash <- train.postcrash %>% filter(BldgType != "Twnhs")
+train.postcrash <- train.postcrash %>% filter(Exterior2nd != "Stucco")
+train.postcrash <- train.postcrash %>% filter(Exterior2nd != "Plywood")
+train.postcrash <- train.postcrash %>% filter(HouseStyle != "2Story")
+train.postcrash <- train.postcrash %>% filter(Neighborhood != "MeadowV")
+
+# when we apply linear regression again, we notice that at least one of our predictors doesn't have two factors
+# We view the summary of our data and delete the appropriate predictors: RoofMatl, CentralAir, GarageQual, GarageCond
+summary(train.postcrash)
+train.postcrash <- train.postcrash %>% dplyr::select(- RoofMatl, - CentralAir, - GarageQual, - GarageCond)
+
+# we apply linear regression again
+lm.total.post <- lm(log(SalePrice)~., data=train.postcrash)
+
+## ^ CURRENTLY GIVES ME AN ERROR -- I will look into this later
+
+
+
+
+
+
+########## STILL LEFT TO DO #######
+# We check the alias function 
+alias(lm.total.post)
+
+
+# We remove highly correlated variables, the rest are categorical variables
+vif(lm.total.pre) > 10
+```
 
 
 
