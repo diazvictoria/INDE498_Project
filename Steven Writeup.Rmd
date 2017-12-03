@@ -1,3 +1,11 @@
+---
+title: "Steven Write Up"
+author: "Steven Hwang, Haena Kim, Victoria Diaz"
+date: "December 3, 2017"
+output: html_document
+---
+
+```{r cleaning, include=FALSE}
 library(dplyr)
 library(randomForest)
 library(corrplot)
@@ -164,89 +172,43 @@ train$PoolQC <- factor(train$PoolQC)
 train$Fence <- factor(train$Fence)
 train$SaleType <- factor(train$SaleType)
 train$SaleCondition <- factor(train$SaleCondition)
+```
 
-#Keeping only needed columns and adding binary variables for certain features
-train <- train %>% dplyr::select(MSSubClass, GrLivArea, Street, Neighborhood, HouseStyle, LotArea, YearBuilt, YearRemodAdd, Utilities, RoofMatl, Exterior1st,
-                          OverallCond, Foundation, BsmtFinType1, FullBath, BsmtFullBath, HalfBath, BsmtHalfBath, Fireplaces, 
-                          GarageType, GarageCars, GarageArea, CentralAir, Heating, TotalBsmtSF, WoodDeckSF, OpenPorchSF, EnclosedPorch,
-                          Fence, YrSold, SalePrice) %>%
-  mutate(NumFullBath = FullBath+BsmtFullBath, NumHalfBath = HalfBath+BsmtHalfBath, Deck = ifelse(WoodDeckSF > 0, 1, 0), 
-        Porch = ifelse(OpenPorchSF+EnclosedPorch>0,1,0), Fence = ifelse(Fence=="none",0,1)) %>%
-  dplyr::select(-FullBath, -BsmtFullBath, -HalfBath, -BsmtHalfBath, -WoodDeckSF, -OpenPorchSF, -EnclosedPorch, -Street, -Utilities)
+## Data Preprocessing
 
-#Coercing proper data type
-train$MSSubClass <- factor(train$MSSubClass)
-train$OverallCond <- factor(train$OverallCond)
-train$Fence <- factor(train$Fence)
-train$Deck <- factor(train$Deck)
-train$Porch <- factor(train$Porch)
+Before the data could be used, some data preprocessing had to be conducted. The dataset contained 46 categorical variables with the number of categories ranging from 2 to 25. All rare category levels with less than 6 observations were removed reducing the total number of observations from 1460 to 1259. After removal of the rare categorical levels, the variables Utilities and Street had only 1 remaining level and thus were dropped from our dataset, reducing the number of variables from 81 to 79. For some of the analyses, the granular data for specific house features, such as porch square footage, deck square footage, etc., were converted to binary variables. Due to the fact our data ranged from 2006 to 2010, we split our data into pre and post housing market crash to try to account for the temporal disruption. After the split, the pre crash dataset contained 558 observations and the post crash dataset contained 701 obersvations. In all cases the data was split into a training set consiting of 80\% of the data and a test set containing the rest. 
 
-#Split data into 2006-2007 and 2008-2010
-train.precrash <- train %>% filter(YrSold <= 2007)
-train.postcrash <- train %>% filter(YrSold > 2007)
+## Realistic Buyer Data Models
 
-train.precrash <- train.precrash %>% dplyr::select(-YrSold)
-train.postcrash <- train.postcrash %>% dplyr::select(-YrSold)
+For the previous analysis, we built models to try to predict and identify the significant variables that affected sales price with a granular dataset that is not available for the average buyer. Due to this, we identified commonly avaialable variables from Redfin and Zillow and reduced our dataset to these common variables to produce models that are more realistic for the average house buyer. These commonly available variables are list in table XX.
 
-#Remove unneeded vairables
-rm(train)
+| Feature Name    | Description                                                            |
+|-----------------|------------------------------------------------------------------------|
+| Sale Condition  | Condition of sale                                                      |
+| MS Sub Class    | Identifies the type of dwelling involved in the sale                   |
+| GR Live Area    | Above grade (ground) living area square feet                           |
+| Neighborhood    | Physical locations within Ames city limits                             |
+| House Style     | Style of dwelling                                                      |
+| Lot Area        | Lot size in square feet.                                               |
+| Year Built      | Original construction date                                             |
+| Year Remod Add  | Remodel date (same as construction date if no remodeling or additions) |
+| Roof Matl       | Roof material                                                          |
+| Exterior 1st    | Exterior covering on house                                             |
+| Overall Cond    | Rates the overall condition of the house                               |
+| Foundation      | Type of foundation                                                     |
+| Bsmt Fin Type 1 | Rating of basement finished area                                       |
+| Fireplaces      | Number of fireplaces                                                   |
+| Garage Type     | Garage location                                                        |
+| Garage Cars     | Size of garage in car capacity                                         |
+| Garage Area     | Size of garage in square feet                                          |
+| Central Air     | Central air conditioning                                               |
+| Heating         | Type of heating                                                        |
+| Total Bsmt SF   | Basement square footage                                                |
+| Fence           | Indicator if house has a fence                                         |
+| Deck            | Indicator if house has a deck                                          |
+| Porch           | Indicator if house has a porch                                         |
+| Num Half Bath   | Number of half baths                                                   |
+| Num Full Bath   | Number of full baths                                                   |
+| Sale Price      | Sale price of the house                                                |
 
-trainIndex.pre <- createDataPartition(train.precrash$Neighborhood, p=0.8, list = F, times=1) 
-trainIndex.post <- createDataPartition(train.postcrash$Neighborhood, p=0.8, list = F, times=1)
-
-test.precrash <- train.precrash[-trainIndex.pre,]
-train.precrash <- train.precrash[trainIndex.pre,]
-
-test.postcrash <- train.postcrash[-trainIndex.post,]
-train.postcrash <- train.postcrash[trainIndex.post,]
-
-#Models
-#Pre
-rf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= 22, nodesize= 50)
-pred.pre <- predict(rf.realistic.pre, newdata=test.precrash)
-
-rmse.pre <- sqrt(mean((test.precrash$SalePrice - pred.pre)^2))
-
-#Checking for multicollinearity
-#Tons of correlated variables
-corrplot(cor(train.precrash[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
-
-#Transform to log
-boxcox(SalePrice~., data=train.precrash)
-
-#Alias variables need to remove one
-lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
-train.precrash <- train.precrash %>% filter(HouseStyle != "1.5Unf")
-lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
-#Removing highly correlated variables, the rest are categorical variables
-vif(lm.realistic.pre) > 10
-
-#Remove multicolinear vars
-train.precrash <- train.precrash %>% dplyr::select(-YearRemodAdd, -GarageCars)
-
-#Heating and Fence not significant
-lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
-
-#Post
-rf.realistic.post <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE, mtry= 24, nodesize= 50)
-pred.post <- predict(rf.realistic.post, newdata = test.postcrash)
-
-rmse.post <- sqrt(mean((test.postcrash$SalePrice - pred.post)^2))
-#Checking for multicollinearity
-corrplot(cor(train.postcrash[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
-
-#Transform to log
-boxcox(SalePrice~., data=train.precrash)
-
-lm.realistic.post <- lm(log(SalePrice)~., data=train.postcrash)
-train.postcrash <- train.postcrash %>% filter(HouseStyle != "1.5Unf")
-lm.realistic.post <- lm(log(SalePrice)~., data=train.postcrash)
-vif(lm.realistic.post) > 10
-
-#Remove multicolinear vars
-train.postcrash <- train.postcrash %>% dplyr::select(-YearRemodAdd, -GarageCars)
-
-#Deck, Fence, GarageType, RoofMatl not sig
-lm.realistic.post <- lm(log(SalePrice)~., data=train.postcrash)
-
-
+The objective of this analysis is to help buyers understand what variables affect the sales price of a house and to give buyers an idea of what offer to submit. To answer this question, we built a random forest model to accurately predict the price and a multivariate regression model to identify significant variables and their contribution to the sale price of a house. 
