@@ -212,3 +212,81 @@ For the previous analysis, we built models to try to predict and identify the si
 | Sale Price      | Sale price of the house                                                |
 
 The objective of this analysis is to help buyers understand what variables affect the sales price of a house and to give buyers an idea of what offer to submit. To answer this question, we built a random forest model to accurately predict the price and a multivariate regression model to identify significant variables and their contribution to the sale price of a house. 
+
+## Pre Housing Market Crash
+
+```{r, eval=FALSE}
+#Keeping only needed columns and adding binary variables for certain features
+train <- train %>% dplyr::select(MSSubClass, GrLivArea, Street, Neighborhood, HouseStyle, LotArea, YearBuilt, YearRemodAdd, Utilities, RoofMatl, Exterior1st, OverallCond, Foundation, BsmtFinType1, FullBath, BsmtFullBath, HalfBath, BsmtHalfBath, Fireplaces, 
+                          GarageType, GarageCars, GarageArea, CentralAir, Heating, TotalBsmtSF, WoodDeckSF, OpenPorchSF, EnclosedPorch,
+                          Fence, YrSold, SalePrice) %>%
+  mutate(NumFullBath = FullBath+BsmtFullBath, NumHalfBath = HalfBath+BsmtHalfBath, Deck = ifelse(WoodDeckSF > 0, 1, 0), 
+        Porch = ifelse(OpenPorchSF+EnclosedPorch>0,1,0), Fence = ifelse(Fence=="none",0,1)) %>%
+  dplyr::select(-FullBath, -BsmtFullBath, -HalfBath, -BsmtHalfBath, -WoodDeckSF, -OpenPorchSF, -EnclosedPorch, -Street, -Utilities)
+
+#Coercing proper data type
+train$MSSubClass <- factor(train$MSSubClass)
+train$OverallCond <- factor(train$OverallCond)
+train$Fence <- factor(train$Fence)
+train$Deck <- factor(train$Deck)
+train$Porch <- factor(train$Porch)
+
+train <- train[,-1]
+
+#Split data into 2006-2007 and 2008-2010
+train.precrash <- train %>% filter(YrSold <= 2007)
+train.postcrash <- train %>% filter(YrSold > 2007)
+
+train.precrash <- train.precrash %>% dplyr::select(-YrSold)
+train.postcrash <- train.postcrash %>% dplyr::select(-YrSold)
+
+set.seed(50)
+trainIndex.pre <- createDataPartition(train.precrash$Neighborhood, p=0.8, list = F, times=1) 
+trainIndex.post <- createDataPartition(train.postcrash$Neighborhood, p=0.8, list = F, times=1)
+
+test.precrash <- train.precrash[-trainIndex.pre,]
+train.precrash <- train.precrash[trainIndex.pre,]
+
+test.postcrash <- train.postcrash[-trainIndex.post,]
+train.postcrash <- train.postcrash[trainIndex.post,]
+```
+
+### Random Forest Model
+
+### Linear Regression Model
+
+Before building the regression model the multicollinearity and the Homoscedasticity were checked. To address multicollinearity, a correlation plot for the continuous variables was plotted and analyzed to see if there were significant linear relationships between the independent variables, this plot can be seen in Figure XX. Analyzing the correlation plot, we see that YearBuilt & YearRemodAdd and GarageCars & GarageArea are highly linearely correlated so YearRemodAdd and GarageCars were dropped from the analysis. 
+
+```{r multicor, echo=FALSE}
+corrplot(cor(train.precrash[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
+train <- train %>% dplyr::select(-YearRemodAdd, -GarageCars)
+train <- train %>% filter(HouseStyle != "1.5Unf")
+lm.realistic.pre <- lm(SalePrice~., data=train.precrash)
+```
+For Homoscedasticity, we fit an initial regression model and noticed that the residual vs fitted plot had a non-constant variance. To address this, we used a boxcox transformation and obtained the closest transformation for the SalePrice to be a log transformation. The updated residual vs fitted plot shows that the variance seems to be constant. 
+
+```{r rvsf, echo=FALSE}
+plot(lm.realistic.pre,1)
+boxcox(SalePrice~., data=train.precrash)
+lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
+plot(lm.realistic.pre,1)
+```
+
+After addressing those issues, a final regression model was fitted. 
+
+## Post Housing Market Crash
+
+### Random Forest Model
+
+### Linear Regression Model
+
+The same process was followed for the post housing market crash dataset as the pre. Multicollnearity and Homoscedasticity needed to be addressed in the same manner as the pre housing market crash dataset, to save space and time figures for this process are left out. 
+
+```{r multicor, echo=FALSE}
+train <- train %>% dplyr::select(-YearRemodAdd, -GarageCars)
+train <- train %>% filter(HouseStyle != "1.5Unf")
+lm.realistic.pre <- lm(SalePrice~., data=train.precrash)
+lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
+```
+
+After addressing those issues, a final regression model was fitted. 

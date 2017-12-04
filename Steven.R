@@ -188,9 +188,7 @@ train.postcrash <- train %>% filter(YrSold > 2007)
 train.precrash <- train.precrash %>% dplyr::select(-YrSold)
 train.postcrash <- train.postcrash %>% dplyr::select(-YrSold)
 
-#Remove unneeded vairables
-rm(train)
-
+set.seed(50)
 trainIndex.pre <- createDataPartition(train.precrash$Neighborhood, p=0.8, list = F, times=1) 
 trainIndex.post <- createDataPartition(train.postcrash$Neighborhood, p=0.8, list = F, times=1)
 
@@ -202,35 +200,68 @@ train.postcrash <- train.postcrash[trainIndex.post,]
 
 #Models
 #Pre
-rf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= 22, nodesize= 50)
-pred.pre <- predict(rf.realistic.pre, newdata=test.precrash)
+set.seed(1)
+mse.pre.mtry <- c()
+x.mtry <- c(1,3,5,7,9,11,13,15,17,19,21,23,25) 
+for (i in x.mtry) {
+  rf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= i, nodesize= 20)
+  mse.pre.mtry <- c(mse.pre.mtry, mean(rf.realistic.pre$mse))
+}
 
+set.seed(1)
+mse.pre.node <- c()
+x.node <- c(5,10,15,20,25,30,35,40,45,50)
+for (i in x.node) {
+  rf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= 15, nodesize= i)
+  mse.pre.node <- c(mse.pre.node, mean(rf.realistic.pre$mse))
+}
+
+rf.realistic.pre <- randomForest(SalePrice~., data=train.precrash, ntree=120, importance=TRUE, mtry= 15, nodesize= 15)
+pred.pre <- predict(rf.realistic.pre, newdata=test.precrash)
 rmse.pre <- sqrt(mean((test.precrash$SalePrice - pred.pre)^2))
 
 #Checking for multicollinearity
 #Tons of correlated variables
-corrplot(cor(train.precrash[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
+corrplot(cor(train[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
+
+lm.realistic.pre <- lm(SalePrice~., data=train)
 
 #Transform to log
 boxcox(SalePrice~., data=train.precrash)
 
 #Alias variables need to remove one
-lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
-train.precrash <- train.precrash %>% filter(HouseStyle != "1.5Unf")
-lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
+lm.realistic.pre <- lm(log(SalePrice)~., data=train)
+train <- train %>% filter(HouseStyle != "1.5Unf")
+lm.realistic.pre <- lm(log(SalePrice)~., data=train)
 #Removing highly correlated variables, the rest are categorical variables
 vif(lm.realistic.pre) > 10
 
 #Remove multicolinear vars
-train.precrash <- train.precrash %>% dplyr::select(-YearRemodAdd, -GarageCars)
+train <- train %>% dplyr::select(-YearRemodAdd, -GarageCars)
 
 #Heating and Fence not significant
-lm.realistic.pre <- lm(log(SalePrice)~., data=train.precrash)
+lm.realistic.pre <- lm(log(SalePrice)~., data=train)
 
 #Post
-rf.realistic.post <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE, mtry= 24, nodesize= 50)
-pred.post <- predict(rf.realistic.post, newdata = test.postcrash)
+set.seed(1)
+mse.post.mtry <- c()
+x.mtry <- c(1,3,5,7,9,11,13,15,17,19,21,23,25) 
+for (i in x.mtry) {
+  rf.realistic.post <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE, mtry= i, nodesize= 20)
+  mse.post.mtry <- c(mse.post.mtry, mean(rf.realistic.post$mse))
+}
 
+set.seed(1)
+mse.post.node <- c()
+x.node <- c(5,10,15,20,25,30,35,40,45,50)
+for (i in x.node) {
+  rf.realistic.post <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE, mtry= 7, nodesize= i)
+  mse.post.node <- c(mse.post.node, mean(rf.realistic.post$mse))
+}
+
+
+rf.realistic.post <- randomForest(SalePrice~., data=train.postcrash, ntree=120, importance=TRUE, mtry= 7, nodesize= 10)
+pred.post <- predict(rf.realistic.post, newdata = test.postcrash)
 rmse.post <- sqrt(mean((test.postcrash$SalePrice - pred.post)^2))
 #Checking for multicollinearity
 corrplot(cor(train.postcrash[,c(2,5,6,7,13,15,16,19,22,23)]), type = "upper")
