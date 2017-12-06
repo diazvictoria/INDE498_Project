@@ -1,0 +1,378 @@
+---
+title: "Project"
+: Haena Kim
+---
+
+Initial data cleaning
+```{r}
+library(dplyr)
+library(randomForest)
+library(corrplot)
+library(MASS)
+library(car)
+library(caret)
+
+setwd("C:\\Users\\haenakim\\Documents\\GIT\\INDE498_Project")
+
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+
+train
+
+# finding the dimension of our datasets
+dim(train) 
+
+#Data cleaning for train
+train$Alley <- as.character(train$Alley)
+train$Alley[is.na(train$Alley)] <- "none"
+train$Alley <- as.factor(train$Alley)
+
+train$MasVnrType <- as.character(train$MasVnrType)
+train$MasVnrType[is.na(train$MasVnrType)] <- "none"
+train$MasVnrType <- as.factor(train$MasVnrType)
+
+train$MasVnrArea[is.na(train$MasVnrArea)] <- 0
+
+train$BsmtQual <- as.character(train$BsmtQual)
+train$BsmtQual[is.na(train$BsmtQual)] <- "none"
+train$BsmtQual <- as.factor(train$BsmtQual)
+
+train$BsmtCond <- as.character(train$BsmtCond)
+train$BsmtCond[is.na(train$BsmtCond)] <- "none"
+train$BsmtCond <- as.factor(train$BsmtCond)
+
+train$BsmtExposure <- as.character(train$BsmtExposure)
+train$BsmtExposure[is.na(train$BsmtExposure)] <- "none"
+train$BsmtExposure <- as.factor(train$BsmtExposure)
+
+train$BsmtFinType1 <- as.character(train$BsmtFinType1)
+train$BsmtFinType1[is.na(train$BsmtFinType1)] <- "none"
+train$BsmtFinType1 <- as.factor(train$BsmtFinType1)
+
+train$BsmtFinType2 <- as.character(train$BsmtFinType2)
+train$BsmtFinType2[is.na(train$BsmtFinType2)] <- "none"
+train$BsmtFinType2 <- as.factor(train$BsmtFinType2)
+
+train$FireplaceQu <- as.character(train$FireplaceQu)
+train$FireplaceQu[is.na(train$FireplaceQu)] <- "none"
+train$FireplaceQu <- as.factor(train$FireplaceQu)
+
+train$GarageType <- as.character(train$GarageType)
+train$GarageType[is.na(train$GarageType)] <- "none"
+train$GarageType <- as.factor(train$GarageType)
+
+train$GarageFinish <- as.character(train$GarageFinish)
+train$GarageFinish[is.na(train$GarageFinish)] <- "none"
+train$GarageFinish <- as.factor(train$GarageFinish)
+
+train$GarageQual <- as.character(train$GarageQual)
+train$GarageQual[is.na(train$GarageQual)] <- "none"
+train$GarageQual <- as.factor(train$GarageQual)
+
+train$GarageCond <- as.character(train$GarageCond)
+train$GarageCond[is.na(train$GarageCond)] <- "none"
+train$GarageCond <- as.factor(train$GarageCond)
+
+train$PoolQC <- as.character(train$PoolQC)
+train$PoolQC[is.na(train$PoolQC)] <- "none"
+train$PoolQC <- as.factor(train$PoolQC)
+
+train$Fence <- as.character(train$Fence)
+train$Fence[is.na(train$Fence)] <- "none"
+train$Fence <- as.factor(train$Fence)
+
+train$MiscFeature <- as.character(train$MiscFeature)
+train$MiscFeature[is.na(train$MiscFeature)] <- "none"
+train$MiscFeature <- as.factor(train$MiscFeature)
+
+train$LotFrontage[is.na(train$LotFrontage)] <- 0
+
+train <- train %>% filter(!is.na(Electrical) & !is.na(GarageYrBlt))
+
+#Removing rare factors
+train <- train %>% group_by(MSSubClass) %>% filter(n() >= 6) %>% 
+  group_by(MSZoning) %>% filter(n() >= 6) %>%
+  group_by(Alley) %>% filter(n() >= 6) %>%
+  group_by(LotShape) %>% filter(n() >= 6) %>%
+  group_by(LandContour) %>% filter(n() >= 6) %>%
+  group_by(LotConfig) %>% filter(n() >= 6) %>%
+  group_by(Neighborhood) %>% filter(n() >= 6) %>%
+  group_by(Condition1) %>% filter(n() >= 6) %>%
+  group_by(Condition2) %>% filter(n() >= 6) %>%
+  group_by(BldgType) %>% filter(n() >= 6) %>%
+  group_by(HouseStyle) %>% filter(n() >= 6) %>%
+  group_by(OverallQual) %>% filter(n() >= 6) %>%
+  group_by(OverallCond) %>% filter(n() >= 6) %>%
+  group_by(RoofStyle) %>% filter(n() >= 6) %>%
+  group_by(RoofMatl) %>% filter(n() >= 6) %>%
+  group_by(Exterior1st) %>% filter(n() >= 6) %>%
+  group_by(Exterior2nd) %>% filter(n() >= 6) %>%
+  group_by(MasVnrType) %>% filter(n() >= 6) %>%
+  group_by(ExterQual) %>% filter(n() >= 6) %>%
+  group_by(ExterCond) %>% filter(n() >= 6) %>%
+  group_by(Foundation) %>% filter(n() >= 6) %>%
+  group_by(BsmtQual) %>% filter(n() >= 6) %>%
+  group_by(BsmtCond) %>% filter(n() >= 6) %>%
+  group_by(BsmtExposure) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType1) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType2) %>% filter(n() >= 6) %>%
+  group_by(Heating) %>% filter(n() >= 6) %>%
+  group_by(HeatingQC) %>% filter(n() >= 6) %>%
+  group_by(CentralAir) %>% filter(n() >= 6) %>%
+  group_by(KitchenQual) %>% filter(n() >= 6) %>%
+  group_by(Functional) %>% filter(n() >= 6) %>%
+  group_by(FireplaceQu) %>% filter(n() >= 6) %>%
+  group_by(GarageType) %>% filter(n() >= 6) %>%
+  group_by(GarageFinish) %>% filter(n() >= 6) %>%
+  group_by(GarageQual) %>% filter(n() >= 6) %>%
+  group_by(GarageCond) %>% filter(n() >= 6) %>%
+  group_by(PavedDrive) %>% filter(n() >= 6) %>%
+  group_by(PoolQC) %>% filter(n() >= 6) %>%
+  group_by(Fence) %>% filter(n() >= 6) %>%
+  group_by(SaleType) %>% filter(n() >= 6) %>%
+  group_by(SaleCondition) %>% filter(n() >= 6)
+  
+
+train$MSSubClass <- factor(train$MSSubClass) 
+train$MSZoning <- factor(train$MSZoning)
+train$Alley <- factor(train$Alley)
+train$LotShape <- factor(train$LotShape)
+train$LandContour <- factor(train$LandContour)
+train$LotConfig <- factor(train$LotConfig)
+train$Neighborhood <- factor(train$Neighborhood)
+train$Condition1 <- factor(train$Condition1)
+train$Condition2 <- factor(train$Condition2)
+train$BldgType <- factor(train$BldgType)
+train$HouseStyle <- factor(train$HouseStyle)
+train$OverallQual <- factor(train$OverallQual)
+train$OverallCond <- factor(train$OverallCond)
+train$RoofStyle <- factor(train$RoofStyle)
+train$RoofMatl <- factor(train$RoofMatl)
+train$Exterior1st <- factor(train$Exterior1st)
+train$Exterior2nd <- factor(train$Exterior2nd)
+train$MasVnrType <- factor(train$MasVnrType)
+train$ExterQual <- factor(train$ExterQual)
+train$ExterCond <- factor(train$ExterCond)
+train$Foundation <- factor(train$Foundation)
+train$BsmtQual <- factor(train$BsmtQual)
+train$BsmtCond <- factor(train$BsmtCond)
+train$BsmtExposure <- factor(train$BsmtExposure)
+train$BsmtFinType1 <- factor(train$BsmtFinType1)
+train$BsmtFinType2 <- factor(train$BsmtFinType2)
+train$Heating <- factor(train$Heating)
+train$HeatingQC <- factor(train$HeatingQC)
+train$CentralAir <- factor(train$CentralAir)
+train$KitchenQual <- factor(train$KitchenQual)
+train$Functional <- factor(train$Functional)
+train$FireplaceQu <- factor(train$FireplaceQu)
+train$GarageType <- factor(train$GarageType)
+train$GarageFinish <- factor(train$GarageFinish)
+train$GarageQual <- factor(train$GarageQual)
+train$GarageCond <- factor(train$GarageCond)
+train$PavedDrive <- factor(train$PavedDrive)
+train$PoolQC <- factor(train$PoolQC)
+train$Fence <- factor(train$Fence)
+train$SaleType <- factor(train$SaleType)
+train$SaleCondition <- factor(train$SaleCondition)
+
+```
+
+Big question: Do different neighborhoods affect the housing prices?
+
+```{r}
+
+#Split data into 2006-2007 and 2008-2010
+# train.precrash <- train %>% filter(YrSold <= 2007)
+# train.postcrash <- train %>% filter(YrSold > 2007)
+# 
+# train.precrash <- train.precrash %>% dplyr::select(-YrSold)
+# train.postcrash <- train.postcrash %>% dplyr::select(-YrSold)
+
+#NEIGHBORING
+table(train$Neighborhood)
+
+library(ggplot2)
+
+ggplot(train, aes(x = train$SalePrice, y = train$Neighborhood)) + geom_point(aes(colour = factor(train$Neighborhood))) + xlab("Sales Price") + 
+  ylab("different neighborhood") + ggtitle("Impact of different neighborhood on sales price") + scale_colour_discrete("Neighborhood in Ames,IA")
+
+#Checked the geometric characteristics for each neighborhoods from the map. Two groups were seperated from north and south
+
+trian.north <- train %>% dplyr::filter(Neighborhood=="Blmngtn" |Neighborhood=="BrkSide"|Neighborhood=="Gilbert"|Neighborhood=="NAmes"||Neighborhood=="NoRidge"|Neighborhood=="NPkVill"|Neighborhood=="NridgHt"|Neighborhood=="BrDale"| Neighborhood=="NWAmes"| Neighborhood=="OldTown" |Neighborhood=="Somerst",Neighborhood=="StoneBr")
+
+trian.south <- train %>% dplyr::filter(Neighborhood=="Bluestem"|Neighborhood=="ClearCr"|Neighborhood=="CollgCr"| Neighborhood=="Crawfor"| Neighborhood=="Edwards"|Neighborhood=="MeadowV"|  Neighborhood=="Mitchel"|Neighborhood=="SWISU"| Neighborhood=="Sawyer" |Neighborhood=="SawyerW" |  Neighborhood=="Timber"| Neighborhood=="Veenker")
+
+
+#Scatter plot
+
+library(ggplot2)
+
+train$Neighborhoodcategory<- 
+  ifelse(train$Neighborhood=="Blmngtn" |train$Neighborhood=="BrkSide"|train$Neighborhood=="Gilbert"|train$Neighborhood=="NAmes"|train$Neighborhood=="NoRidge"|train$Neighborhood=="NPkVill"|train$Neighborhood=="NridgHt"|train$Neighborhood=="BrDale"| train$Neighborhood=="NWAmes"| train$Neighborhood=="OldTown" |train$Neighborhood=="Somerst"|train$Neighborhood=="StoneBr", "1_North",
+         ifelse(train$Neighborhood=="Bluestem"|train$Neighborhood=="ClearCr"|train$Neighborhood=="CollgCr"| train$Neighborhood=="Crawfor"|train$Neighborhood=="Edwards"|train$Neighborhood=="MeadowV"|  train$Neighborhood=="Mitchel"|train$Neighborhood=="SWISU"| train$Neighborhood=="Sawyer" |train$Neighborhood=="SawyerW" |  train$Neighborhood=="Timber"| train$Neighborhood=="Veenker", "2_South", "Other")
+         )
+
+ggplot(train, aes(x = train$SalePrice, y = train$Neighborhood)) + geom_point(aes(colour = factor(train$Neighborhoodcategory))) + xlab("Sales Price") + 
+  ylab("different neighborhood") + ggtitle("Impact of different neighborhood on sales price") + scale_colour_discrete("Neighborhood in Ames,IA")
+
+#Assumption: North is more expensive?
+
+```
+
+Select predictors that are available to the buyers on 'Zillow' website
+```{r}
+
+# subset of variables we want in our first model
+train_info <- subset(train, select=c(
+"LotArea",
+"Neighborhood",
+"YearBuilt",
+"YearRemodAdd",
+"TotalBsmtSF",
+"GrLivArea",
+"FullBath",
+"HalfBath",
+"BedroomAbvGr",
+"Fireplaces",
+"GarageCars",
+"GarageArea",
+"MoSold",
+"YrSold",
+"SalePrice","HouseStyle","SaleCondition"))
+
+str(train_info)
+```
+
+
+
+```{r}
+
+library(rpart)
+library(rpart.plot)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(RCurl)
+library(partykit)
+
+require(rpart)
+require(rpart.plot)
+
+tree <-rpart( SalePrice ~., train_info, minbucket =1) 
+prp(tree,nn.cex=1) 
+```
+
+The importance score for each variable can be obtained from the tree. GarageCars and neighborhood has the 1st and 2nd largest importance score among all variables. 
+```{r}
+print(tree$variable.importance)
+```
+
+Let's prune the tree 
+
+```{r}
+tree_0.05 <- prune(tree,cp=0.05)
+# rpart.plot(tree_0.05,fallen.leaves=FALSE)
+prp(tree_0.05,nn.cex=1)
+```
+
+
+Now we can check if there are some interaction terms in a linear regression model. The tree model used GarageCars as the first variable to split the model, which may indicate that this variable has the most non-linear relationship with the saleprice, our outcome. 
+
+```{r}
+library(ggplot2)
+
+train_info$Neighborhoodcategory<- 
+  ifelse(train$Neighborhood=="Blmngtn" |train$Neighborhood=="BrkSide"|train$Neighborhood=="Gilbert"|train$Neighborhood=="NAmes"|train$Neighborhood=="NoRidge"|train$Neighborhood=="NPkVill"|train$Neighborhood=="NridgHt"|train$Neighborhood=="BrDale"| train$Neighborhood=="NWAmes"| train$Neighborhood=="OldTown" |train$Neighborhood=="Somerst"|train$Neighborhood=="StoneBr", "1_North",
+         ifelse(train$Neighborhood=="Bluestem"|train$Neighborhood=="ClearCr"|train$Neighborhood=="CollgCr"| train$Neighborhood=="Crawfor"|train$Neighborhood=="Edwards"|train$Neighborhood=="MeadowV"|  train$Neighborhood=="Mitchel"|train$Neighborhood=="SWISU"| train$Neighborhood=="Sawyer" |train$Neighborhood=="SawyerW" |  train$Neighborhood=="Timber"| train$Neighborhood=="Veenker", "2_South", "Other")
+         )
+
+#visualization of finding GarageCars^2 terms as one interaction term
+p<-ggplot(train_info, aes(x = train_info$GarageCars, y = train_info$SalePrice),group=1) 
+p<- p+stat_summary(fun.y=mean, colour="red", geom="line", size = 3)
+p<- p + geom_point(aes(colour=train_info$Neighborhoodcategory)) 
+p<- p+xlab("Numberof Garage") 
+p<- p +ylab("Sales Price") 
+p<- p+ggtitle("Impact of size of garage in car capacity on sales price") 
+p<- p+scale_colour_discrete("Neighborhood in Ames,IA")
+print(p)
+
+
+
+```
+
+Need to convert factor to integer -> extra columns needs to be made for
+Neighborhood,HouseStyle,SaleCondition
+```{r}
+
+#Neighborhood
+train_info$Neighborhood_North<- 
+  ifelse(train$Neighborhood=="Blmngtn" |train$Neighborhood=="BrkSide"|train$Neighborhood=="Gilbert"|train$Neighborhood=="NAmes"|train$Neighborhood=="NoRidge"|train$Neighborhood=="NPkVill"|train$Neighborhood=="NridgHt"|train$Neighborhood=="BrDale"| train$Neighborhood=="NWAmes"| train$Neighborhood=="OldTown" |train$Neighborhood=="Somerst"|train$Neighborhood=="StoneBr", 1, 0)
+         
+
+train_info$Neighborhood_South<- ifelse(train$Neighborhood=="Bluestem"|train$Neighborhood=="ClearCr"|train$Neighborhood=="CollgCr"| train$Neighborhood=="Crawfor"|train$Neighborhood=="Edwards"|train$Neighborhood=="MeadowV"|  train$Neighborhood=="Mitchel"|train$Neighborhood=="SWISU"| train$Neighborhood=="Sawyer" |train$Neighborhood=="SawyerW" |  train$Neighborhood=="Timber"| train$Neighborhood=="Veenker", 1, 0)
+
+
+#HouseStyle
+train_info$HouseStyle_1<- 
+  ifelse(train$HouseStyle=="1.5Fin" |train$HouseStyle=="1.5Unf"|train$HouseStyle=="1Story", 1, 0)
+
+train_info$HouseStyle_2<- 
+  ifelse(train$HouseStyle=="2.5Fin" |train$HouseStyle=="2.5Unf"|train$HouseStyle=="2Story", 1, 0)
+
+train_info$HouseStyle_3<- 
+  ifelse(train$HouseStyle=="SFoyer" |train$HouseStyle=="SLvl", 1, 0)
+
+#SaleCondition
+
+train_info$SaleCondition_normal<- 
+  ifelse(train$SaleCondition=="Normal", 1, 0)
+
+
+train_info$SaleCondition_notnormal<- 
+  ifelse(train$SaleCondition=="Abnorml"|train$SaleCondition=="Alloca"|train$SaleCondition=="Family"|train$SaleCondition=="Partial", 1, 0)
+
+str(train_info)
+
+```
+
+
+```{r}
+# fit a full-scale model
+
+lm.full <- lm(SalePrice ~ ., data = train)
+summary(lm.full)
+
+```
+
+
+To build the accurate linear regression model, we checked correlinearity between variables
+```{r}
+
+
+
+```
+
+
+
+
+```{r}
+# Evaluate the variable importance by all subsets regression
+# install.packages("leaps")
+library(leaps)
+leaps<-regsubsets(MMSCORE ~ ., data = AD,nbest=4)
+# view results 
+summary(leaps)
+# plot a table of models showing variables in each model.
+# models are ordered by the selection statistic.
+plot(leaps,scale="r2")
+```
+
+
+```{r}
+#clustering
+
+require( 'ggplot2' )
+p <- qplot( data=linear.data, x.1, x.2, colour=factor(SalePrice) )
+p <- p + labs(title = "Scatterplot of data points of two classes")
+print(p)
+```
