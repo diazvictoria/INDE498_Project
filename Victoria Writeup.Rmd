@@ -1,0 +1,47 @@
+---
+title: "Victoria Writeup"
+output:
+    html_document: 
+     smart: false
+---
+
+
+
+## Complete Buyer Data Models 
+### Pre-crash Models: Linear Regression
+We begun by conducting a complete analysis on all the predictors in order to identify the importance of each predictor in determining the price of the house. The result of this analysis will give insight into the weight of each predictor to first time home buyers. Having this information will allow first time home buyers the ability to analyze what is important to them as well as how important certain features are. 
+
+Our first model is a linear regression model with the entire training dataset of homes sold within the years 2006 and 2007. We begun this analysis by removing sparse variables such as Ultitilies (All public ultities: 558; Electricity and Gas Only: 0) and Street (Paved: 588; Gravel:0). We then created a correlation plot to discover which (if any) variables were correlated enough to negatively impact our linear regression model. We saw evidence of high correlations between some variables, but only chose to remove the year the garage was built, which was highly correlated with the year the house was built. A Box Cox transformation of our linear regression model informed urged us to consider $log$(SalePrice) instead of SalePrice as our outcome variable, which we did. Finally, we began to apply linear regression models to the dataset, removing highly correlated factors along the way. Below are the results of our final model. 
+
+```{r}
+lm.total.pre.df
+```
+INCLUDE THE NAMES OF THE CORRESPONDNING VARIABLES 
+INCLUDE A PLOT THAT HAS POINTS CORRESPONDING TO THE WEIGHT OF THE POINTS (WITH LABELS) 
+
+
+## Complete Buyer Data Models
+### Pre-crash Models: Random Forest
+
+
+
+
+## Complete Buyer Data Models
+### Post-crash Models: Linear Regression
+We attempted to apply a linear regression model as we did for the Pre-crash Models, yet the multicollinearlity of the dataset restricted to ``post-crash" dates was too high to be able to do so. Thus, we first conducted LASSO, BLAH BLAH 
+
+
+
+## Complete Buyer Data Models
+### Post-crash Models: Random Forest
+
+
+
+
+
+
+DISCUSS THESE
+--- Notation for variable names? 
+--- Which plots will we include? 
+--- PowerPoint? 
+--- If up early, practice the presentation once before class?
