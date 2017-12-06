@@ -1,0 +1,634 @@
+---
+title: "Victoria_RF"
+date: "12/5/2017"
+output:
+    html_document: 
+     smart: false
+---
+
+
+# Clean the data
+```{r}
+library(dplyr)
+library(randomForest)
+library(corrplot)
+library(MASS)
+library(car)
+library(caret)
+library(tidyr)
+
+setwd("/Users/vdiaz/Documents/GitHub/INDE498_Project/")
+
+train <- read.csv("train.csv")
+
+# finding the dimension of our datasets
+dim(train) 
+
+#Data cleaning for train
+train$Alley <- as.character(train$Alley)
+train$Alley[is.na(train$Alley)] <- "none"
+train$Alley <- as.factor(train$Alley)
+
+train$MasVnrType <- as.character(train$MasVnrType)
+train$MasVnrType[is.na(train$MasVnrType)] <- "none"
+train$MasVnrType <- as.factor(train$MasVnrType)
+
+train$MasVnrArea[is.na(train$MasVnrArea)] <- 0
+
+train$BsmtQual <- as.character(train$BsmtQual)
+train$BsmtQual[is.na(train$BsmtQual)] <- "none"
+train$BsmtQual <- as.factor(train$BsmtQual)
+
+train$BsmtCond <- as.character(train$BsmtCond)
+train$BsmtCond[is.na(train$BsmtCond)] <- "none"
+train$BsmtCond <- as.factor(train$BsmtCond)
+
+train$BsmtExposure <- as.character(train$BsmtExposure)
+train$BsmtExposure[is.na(train$BsmtExposure)] <- "none"
+train$BsmtExposure <- as.factor(train$BsmtExposure)
+
+train$BsmtFinType1 <- as.character(train$BsmtFinType1)
+train$BsmtFinType1[is.na(train$BsmtFinType1)] <- "none"
+train$BsmtFinType1 <- as.factor(train$BsmtFinType1)
+
+train$BsmtFinType2 <- as.character(train$BsmtFinType2)
+train$BsmtFinType2[is.na(train$BsmtFinType2)] <- "none"
+train$BsmtFinType2 <- as.factor(train$BsmtFinType2)
+
+train$FireplaceQu <- as.character(train$FireplaceQu)
+train$FireplaceQu[is.na(train$FireplaceQu)] <- "none"
+train$FireplaceQu <- as.factor(train$FireplaceQu)
+
+train$GarageType <- as.character(train$GarageType)
+train$GarageType[is.na(train$GarageType)] <- "none"
+train$GarageType <- as.factor(train$GarageType)
+
+train$GarageFinish <- as.character(train$GarageFinish)
+train$GarageFinish[is.na(train$GarageFinish)] <- "none"
+train$GarageFinish <- as.factor(train$GarageFinish)
+
+train$GarageQual <- as.character(train$GarageQual)
+train$GarageQual[is.na(train$GarageQual)] <- "none"
+train$GarageQual <- as.factor(train$GarageQual)
+
+train$GarageCond <- as.character(train$GarageCond)
+train$GarageCond[is.na(train$GarageCond)] <- "none"
+train$GarageCond <- as.factor(train$GarageCond)
+
+train$PoolQC <- as.character(train$PoolQC)
+train$PoolQC[is.na(train$PoolQC)] <- "none"
+train$PoolQC <- as.factor(train$PoolQC)
+
+train$Fence <- as.character(train$Fence)
+train$Fence[is.na(train$Fence)] <- "none"
+train$Fence <- as.factor(train$Fence)
+
+train$MiscFeature <- as.character(train$MiscFeature)
+train$MiscFeature[is.na(train$MiscFeature)] <- "none"
+train$MiscFeature <- as.factor(train$MiscFeature)
+
+train$LotFrontage[is.na(train$LotFrontage)] <- 0
+
+train <- train %>% filter(!is.na(Electrical) & !is.na(GarageYrBlt))
+
+#Removing rare factors
+train <- train %>% group_by(MSSubClass) %>% filter(n() >= 6) %>% 
+  group_by(MSZoning) %>% filter(n() >= 6) %>%
+  group_by(Alley) %>% filter(n() >= 6) %>%
+  group_by(LotShape) %>% filter(n() >= 6) %>%
+  group_by(LandContour) %>% filter(n() >= 6) %>%
+  group_by(LotConfig) %>% filter(n() >= 6) %>%
+  group_by(Neighborhood) %>% filter(n() >= 6) %>%
+  group_by(Condition1) %>% filter(n() >= 6) %>%
+  group_by(Condition2) %>% filter(n() >= 6) %>%
+  group_by(BldgType) %>% filter(n() >= 6) %>%
+  group_by(HouseStyle) %>% filter(n() >= 6) %>%
+  group_by(OverallQual) %>% filter(n() >= 6) %>%
+  group_by(OverallCond) %>% filter(n() >= 6) %>%
+  group_by(RoofStyle) %>% filter(n() >= 6) %>%
+  group_by(RoofMatl) %>% filter(n() >= 6) %>%
+  group_by(Exterior1st) %>% filter(n() >= 6) %>%
+  group_by(Exterior2nd) %>% filter(n() >= 6) %>%
+  group_by(MasVnrType) %>% filter(n() >= 6) %>%
+  group_by(ExterQual) %>% filter(n() >= 6) %>%
+  group_by(ExterCond) %>% filter(n() >= 6) %>%
+  group_by(Foundation) %>% filter(n() >= 6) %>%
+  group_by(BsmtQual) %>% filter(n() >= 6) %>%
+  group_by(BsmtCond) %>% filter(n() >= 6) %>%
+  group_by(BsmtExposure) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType1) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType2) %>% filter(n() >= 6) %>%
+  group_by(Heating) %>% filter(n() >= 6) %>%
+  group_by(HeatingQC) %>% filter(n() >= 6) %>%
+  group_by(CentralAir) %>% filter(n() >= 6) %>%
+  group_by(KitchenQual) %>% filter(n() >= 6) %>%
+  group_by(Functional) %>% filter(n() >= 6) %>%
+  group_by(FireplaceQu) %>% filter(n() >= 6) %>%
+  group_by(GarageType) %>% filter(n() >= 6) %>%
+  group_by(GarageFinish) %>% filter(n() >= 6) %>%
+  group_by(GarageQual) %>% filter(n() >= 6) %>%
+  group_by(GarageCond) %>% filter(n() >= 6) %>%
+  group_by(PavedDrive) %>% filter(n() >= 6) %>%
+  group_by(PoolQC) %>% filter(n() >= 6) %>%
+  group_by(Fence) %>% filter(n() >= 6) %>%
+  group_by(SaleType) %>% filter(n() >= 6) %>%
+  group_by(SaleCondition) %>% filter(n() >= 6)
+
+
+train$MSSubClass <- factor(train$MSSubClass) 
+train$MSZoning <- factor(train$MSZoning)
+train$Alley <- factor(train$Alley)
+train$LotShape <- factor(train$LotShape)
+train$LandContour <- factor(train$LandContour)
+train$LotConfig <- factor(train$LotConfig)
+train$Neighborhood <- factor(train$Neighborhood)
+train$Condition1 <- factor(train$Condition1)
+train$Condition2 <- factor(train$Condition2)
+train$BldgType <- factor(train$BldgType)
+train$HouseStyle <- factor(train$HouseStyle)
+train$OverallQual <- factor(train$OverallQual)
+train$OverallCond <- factor(train$OverallCond)
+train$RoofStyle <- factor(train$RoofStyle)
+train$RoofMatl <- factor(train$RoofMatl)
+train$Exterior1st <- factor(train$Exterior1st)
+train$Exterior2nd <- factor(train$Exterior2nd)
+train$MasVnrType <- factor(train$MasVnrType)
+train$ExterQual <- factor(train$ExterQual)
+train$ExterCond <- factor(train$ExterCond)
+train$Foundation <- factor(train$Foundation)
+train$BsmtQual <- factor(train$BsmtQual)
+train$BsmtCond <- factor(train$BsmtCond)
+train$BsmtExposure <- factor(train$BsmtExposure)
+train$BsmtFinType1 <- factor(train$BsmtFinType1)
+train$BsmtFinType2 <- factor(train$BsmtFinType2)
+train$Heating <- factor(train$Heating)
+train$HeatingQC <- factor(train$HeatingQC)
+train$CentralAir <- factor(train$CentralAir)
+train$KitchenQual <- factor(train$KitchenQual)
+train$Functional <- factor(train$Functional)
+train$FireplaceQu <- factor(train$FireplaceQu)
+train$GarageType <- factor(train$GarageType)
+train$GarageFinish <- factor(train$GarageFinish)
+train$GarageQual <- factor(train$GarageQual)
+train$GarageCond <- factor(train$GarageCond)
+train$PavedDrive <- factor(train$PavedDrive)
+train$PoolQC <- factor(train$PoolQC)
+train$Fence <- factor(train$Fence)
+train$SaleType <- factor(train$SaleType)
+train$SaleCondition <- factor(train$SaleCondition)
+```
+
+
+
+
+
+# Define new datasets 
+We have the following dataset: 
+train: the entire cleaned training dataset 
+
+train.precrash: the entire cleaned pre crash dataset 
+train.postcrash: the entire cleaned post crash dataset 
+
+training.precrash: 4/5 of the pre crash dataset 
+testing.precrash: 1/5 of the pre crash dataset 
+
+training.postcrash: 4/5 of the post crash dataset 
+testing.postcrash: 1/5 of the post crash dataset 
+
+training: 4/5 of the train dataset 
+testing: 1/5 of the train dataset 
+```{r} 
+#Split data into 2006-2007 and 2008-2010
+train.precrash <- train %>% filter(YrSold <= 2007)
+train.postcrash <- train %>% filter(YrSold > 2007)
+
+train.precrash <- train.precrash %>% dplyr::select(-YrSold) 
+train.postcrash <- train.postcrash %>% dplyr::select(-YrSold) 
+
+# precrash
+# Create a dataset that will be used for training
+set.seed(1)
+train.ix <- sample(nrow(train.precrash),floor( 4*nrow(train.precrash)/5) )
+training.precrash <- train.precrash[train.ix,]
+# Create a dataset that will be used for testing 
+testing.precrash <- train.precrash[-train.ix,]
+
+# postcrash
+# Create a dataset that will be used for training
+set.seed(1)
+train.ix <- sample(nrow(train.postcrash),floor( 4*nrow(train.postcrash)/5) )
+training.postcrash <- train.postcrash[train.ix,]
+# Create a dataset that will be used for testing 
+testing.postcrash <- train.postcrash[-train.ix,]
+
+# train 
+# Create a dataset that will be used for training
+set.seed(1)
+train.ix <- sample(nrow(train),floor( 4*nrow(train)/5) )
+training <- train[train.ix,]
+# Create a dataset that will be used for testing 
+testing <- train[-train.ix,]
+```
+
+
+
+
+
+
+# train.precrash
+## random forest with random parameters
+```{r}
+# creating a random forest
+rf.pre <- randomForest(SalePrice~., data=training.precrash, ntree=120, importance=TRUE, mtry= 22, nodesize= 50)
+pred.pre <- predict(rf.pre, newdata=testing.precrash)
+
+# root mean square error
+rmse.pre <- sqrt(mean((testing.precrash$SalePrice - pred.pre)^2))
+rmse.pre
+
+# plotting the importance of each variable
+varImpPlot(rf.pre)
+```
+
+
+# train.precrash
+## tuning node size parameter
+We choose a node size of 7 
+```{r}
+results <- NULL
+for( inodesize in c(c(1:10), 15, 20, 30, 40, 50)){
+for(i in 1:5){
+train.ix <- sample(nrow(train.precrash),floor( nrow(train.precrash)/2) )
+rf <- randomForest( SalePrice ~., nodesize = inodesize, data = train.precrash[train.ix,] ) 
+pred.test <- predict(rf, train.precrash[-train.ix,],type="class")
+rmse.pre <- sqrt(mean((train.precrash[-train.ix,]$SalePrice - pred.test)^2))
+results <- rbind( results, c(inodesize, rmse.pre)  )
+}
+}
+
+colnames(results) <- c("node_size","RMSE")
+results <- as.data.frame(results) %>% mutate(node_size=as.character(node_size))
+levels( results$node_size ) <- unique( results$node_size  )
+results$node_size <- factor( results$node_size , unique( results$node_size  )  )
+ggplot() +
+geom_boxplot(data = results, aes(y = RMSE, x = node_size)) +
+geom_point(size=3) 
+```
+
+# train.precrash
+## tuning number of tree parameter
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+require(randomForest)
+set.seed(1)
+
+theme_set(theme_gray(base_size = 15)) 
+results <- NULL
+for( itree in c(1:9, 10, 20, 50, 100, 200)  ){
+  for(i in 1:20){
+    train.ix <- sample(nrow(train.precrash),floor( nrow(train.precrash)/2) )
+    rf <- randomForest( SalePrice ~ ., ntree = itree, data = train.precrash[train.ix,] ) 
+    pred.test <- predict(rf, train.precrash[-train.ix,],type="class")
+    rmse.pre <- sqrt(mean((train.precrash[-train.ix,]$SalePrice - pred.test)^2))
+    results <- rbind( results, c(itree, rmse.pre)  )
+  }
+}
+
+
+colnames(results) <- c("num_trees","RMSE")
+results <- as.data.frame(results) %>% mutate(num_trees=as.character(num_trees))
+levels( results$num_trees ) <- unique( results$num_trees  )
+results$num_trees <- factor( results$num_trees , unique( results$num_trees  )  )
+ggplot() +
+  geom_boxplot(data = results, aes(y = RMSE, x = num_trees)) +
+  geom_point(size=3) 
+```
+
+
+
+# train.precrash
+## tuning number of predictors considered by each tree
+```{r}
+set.seed(1)
+
+
+theme_set(theme_gray(base_size = 15)) 
+results <- NULL
+for( imtry in c(1,3,5,7,9,11,13,15,17,19,21,23,25)  ){
+  for(i in 1:5){
+    train.ix <- sample(nrow(train.precrash),floor( nrow(train.precrash)/2) )
+    rf <- randomForest( SalePrice ~ ., mtry = imtry, data = train.precrash[train.ix,] ) 
+    pred.test <- predict(rf, train.precrash[-train.ix,],type="class")
+    rmse.pre <- sqrt(mean((train.precrash[-train.ix,]$SalePrice - pred.test)^2))
+    results <- rbind( results, c(imtry, rmse.pre)  )
+  }
+}
+
+
+colnames(results) <- c("mtry","RMSE")
+results <- as.data.frame(results) %>% mutate(mtry=as.character(mtry))
+levels( results$mtry ) <- unique( results$mtry  )
+results$mtry <- factor( results$mtry , unique( results$mtry  )  )
+ggplot() +
+  geom_boxplot(data = results, aes(y = RMSE, x = mtry)) +
+  geom_point(size=3) 
+
+```
+
+
+
+# train.precrash
+## random forest with specially chosen parameters
+
+```{r}
+# initializing variables 
+nodesize <- 8
+ntree <- 100
+mtry <- 17
+
+# creating a random forest
+rf.pre.new <- randomForest(SalePrice~., data=training.precrash, ntree=ntree, importance=TRUE, mtry= mtry, nodesize= nodesize)
+pred.pre.new <- predict(rf.pre.new, newdata=testing.precrash)
+
+# root mean square error
+rmse.pre.new <- sqrt(mean((testing.precrash$SalePrice - pred.pre.new)^2))
+rmse.pre.new
+
+# plotting the importance of each variable
+varImpPlot(rf.pre.new, main = "Pre-Crash RF Variable Importance")
+varImpPlot(rf.pre.new, n.var = 15, main = "Pre-Crash RF Variable Importance")
+```
+
+```{r}
+######################################################################
+######################################################################
+# Beginning postcrash analysis 
+######################################################################
+######################################################################
+```
+
+
+# train.postcrash
+## random forest with random parameters
+```{r}
+# creating a random forest
+rf.post <- randomForest(SalePrice~., data=training.postcrash, ntree=120, importance=TRUE, mtry= 22, nodesize= 50)
+pred.post <- predict(rf.post, newdata=testing.postcrash)
+
+# root mean square error
+rmse.post <- sqrt(mean((testing.postcrash$SalePrice - pred.post)^2))
+rmse.post
+
+# plotting the importance of each variable
+varImpPlot(rf.post)
+```
+
+
+# train.postcrash
+## tuning node size parameter
+```{r}
+results <- NULL
+for( inodesize in c(c(1:10), 15, 20, 30, 40, 50)){
+for(i in 1:5){
+train.ix <- sample(nrow(train.postcrash),floor( nrow(train.postcrash)/2) )
+rf <- randomForest( SalePrice ~.,  nodesize = inodesize, data = train.postcrash[train.ix,] ) 
+pred.test <- predict(rf, train.postcrash[-train.ix,],type="class")
+rmse.post <- sqrt(mean((train.postcrash[-train.ix,]$SalePrice - pred.test)^2))
+results <- rbind( results, c(inodesize, rmse.post)  )
+}
+}
+
+colnames(results) <- c("node_size","RMSE")
+results <- as.data.frame(results) %>% mutate(node_size=as.character(node_size))
+levels( results$node_size ) <- unique( results$node_size  )
+results$node_size <- factor( results$node_size , unique( results$node_size  )  )
+ggplot() +
+geom_boxplot(data = results, aes(y = RMSE, x = node_size)) +
+geom_point(size=3) 
+```
+
+# train.postcrash
+## tuning number of tree parameter
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+require(randomForest)
+set.seed(1)
+
+theme_set(theme_gray(base_size = 15)) 
+results <- NULL
+for( itree in c(1:9, 10, 20, 50, 100, 200)  ){
+  for(i in 1:20){
+    train.ix <- sample(nrow(train.postcrash),floor( nrow(train.postcrash)/2) )
+    rf <- randomForest( SalePrice ~ ., ntree = itree, data = train.postcrash[train.ix,] ) 
+    pred.test <- predict(rf, train.postcrash[-train.ix,],type="class")
+    rmse.post <- sqrt(mean((train.postcrash[-train.ix,]$SalePrice - pred.test)^2))
+    results <- rbind( results, c(itree, rmse.post)  )
+  }
+}
+
+
+colnames(results) <- c("num_trees","RMSE")
+results <- as.data.frame(results) %>% mutate(num_trees=as.character(num_trees))
+levels( results$num_trees ) <- unique( results$num_trees  )
+results$num_trees <- factor( results$num_trees , unique( results$num_trees  )  )
+ggplot() +
+  geom_boxplot(data = results, aes(y = RMSE, x = num_trees)) +
+  geom_point(size=3) 
+```
+
+
+
+# train.postcrash
+## tuning number of predictors considered by each tree
+```{r}
+set.seed(1)
+
+
+theme_set(theme_gray(base_size = 15)) 
+results <- NULL
+for( imtry in c(1,3,5,7,9,11,13,15,17,19,21,23,25)  ){
+  for(i in 1:5){
+    train.ix <- sample(nrow(train.postcrash),floor( nrow(train.postcrash)/2) )
+    rf <- randomForest( SalePrice ~ ., mtry = imtry, data = train.postcrash[train.ix,] ) 
+    pred.test <- predict(rf, train.postcrash[-train.ix,],type="class")
+    rmse.post <- sqrt(mean((train.postcrash[-train.ix,]$SalePrice - pred.test)^2))
+    results <- rbind( results, c(imtry, rmse.post)  )
+  }
+}
+
+
+colnames(results) <- c("mtry","RMSE")
+results <- as.data.frame(results) %>% mutate(mtry=as.character(mtry))
+levels( results$mtry ) <- unique( results$mtry  )
+results$mtry <- factor( results$mtry , unique( results$mtry  )  )
+ggplot() +
+  geom_boxplot(data = results, aes(y = RMSE, x = mtry)) +
+  geom_point(size=3) 
+
+```
+
+
+
+# train.postcrash
+## random forest with specially chosen parameters
+
+```{r}
+# initializing variables 
+nodesize <- 9
+ntree <- 200
+mtry <- 21
+
+# creating a random forest
+rf.post.new <- randomForest(SalePrice~., data=training.postcrash, ntree=ntree, importance=TRUE, mtry= mtry, nodesize= nodesize)
+pred.post.new <- predict(rf.post.new, newdata=testing.postcrash)
+
+# root mean square error
+rmse.post.new <- sqrt(mean((testing.postcrash$SalePrice - pred.post)^2))
+rmse.post.new
+
+# plotting the importance of each variable
+varImpPlot(rf.post.new, main = "Post-Crash RF Variable Importance")
+varImpPlot(rf.post.new, n.var = 15, main = "Post-Crash RF Variable Importance")
+```
+
+
+```{r}
+######################################################################
+######################################################################
+# Beginning total train.precrash analysis 
+######################################################################
+######################################################################
+```
+
+
+## random forest with random parameters
+```{r}
+# creating a random forest
+rf.total <- randomForest(SalePrice~., data=training, ntree=120, importance=TRUE, mtry= 22, nodesize= 50)
+pred.total <- predict(rf.total, newdata=testing)
+
+# root mean square error
+rmse.total <- sqrt(mean((testing$SalePrice - pred.total)^2))
+rmse.total
+
+# plotting the importance of each variable
+varImpPlot(rf.total)
+```
+
+
+## tuning node size parameter
+```{r}
+results <- NULL
+for( inodesize in c(c(1:10), 15, 20, 30, 40, 50)){
+for(i in 1:5){
+train.ix <- sample(nrow(train),floor( nrow(train)/2) )
+rf <- randomForest( SalePrice ~., nodesize = inodesize, data = train[train.ix,] ) 
+pred.test <- predict(rf, train[-train.ix,],type="class")
+rmse.total <- sqrt(mean((train[-train.ix,]$SalePrice - pred.test)^2))
+results <- rbind( results, c(inodesize, rmse.total)  )
+}
+}
+
+colnames(results) <- c("node_size","RMSE")
+results <- as.data.frame(results) %>% mutate(node_size=as.character(node_size))
+levels( results$node_size ) <- unique( results$node_size  )
+results$node_size <- factor( results$node_size , unique( results$node_size  )  )
+ggplot() +
+geom_boxplot(data = results, aes(y = RMSE, x = node_size)) +
+geom_point(size=3) 
+```
+
+
+## tuning number of tree parameter
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+require(randomForest)
+set.seed(1)
+
+theme_set(theme_gray(base_size = 15)) 
+results <- NULL
+for( itree in c(1:9, 10, 20, 50, 100, 200)  ){
+  for(i in 1:20){
+    train.ix <- sample(nrow(train),floor( nrow(train)/2) )
+    rf <- randomForest( SalePrice ~ ., ntree = itree, data = train[train.ix,] ) 
+    pred.test <- predict(rf, train[-train.ix,],type="class")
+    rmse.total <- sqrt(mean((train[-train.ix,]$SalePrice - pred.test)^2))
+    results <- rbind( results, c(itree, rmse.total)  )
+  }
+}
+
+
+colnames(results) <- c("num_trees","RMSE")
+results <- as.data.frame(results) %>% mutate(num_trees=as.character(num_trees))
+levels( results$num_trees ) <- unique( results$num_trees  )
+results$num_trees <- factor( results$num_trees , unique( results$num_trees  )  )
+ggplot() +
+  geom_boxplot(data = results, aes(y = RMSE, x = num_trees)) +
+  geom_point(size=3) 
+```
+
+
+
+## tuning number of predictors considered by each tree
+```{r}
+set.seed(1)
+
+theme_set(theme_gray(base_size = 15)) 
+results <- NULL
+for( imtry in c(1,3,5,7,9,11,13,15,17,19,21,23,25)  ){
+  for(i in 1:5){
+    train.ix <- sample(nrow(train),floor( nrow(train)/2) )
+    rf <- randomForest( SalePrice ~ ., mtry = imtry, data = train[train.ix,] ) 
+    pred.test <- predict(rf, train[-train.ix,],type="class")
+    rmse.total <- sqrt(mean((train.precrash[-train.ix,]$SalePrice - pred.test)^2))
+    results <- rbind( results, c(imtry, rmse.total)  )
+  }
+}
+
+
+colnames(results) <- c("mtry","RMSE")
+results <- as.data.frame(results) %>% mutate(mtry=as.character(mtry))
+levels( results$mtry ) <- unique( results$mtry  )
+results$mtry <- factor( results$mtry , unique( results$mtry  )  )
+ggplot() +
+  geom_boxplot(data = results, aes(y = RMSE, x = mtry)) +
+  geom_point(size=3) 
+
+```
+
+
+
+## random forest with specially chosen parameters
+```{r}
+# initializing variables 
+nodesize <- 9
+ntree <- 50
+mtry <- 19
+
+# creating a random forest
+rf.total.new <- randomForest(SalePrice~., data=training, ntree=ntree, importance=TRUE, mtry= mtry, nodesize= nodesize)
+pred.total.new <- predict(rf.total.new, newdata=testing)
+
+# root mean square error
+rmse.total.new <- sqrt(mean((testing$SalePrice - pred.total.new)^2))
+rmse.total.new
+
+# plotting the importance of each variable
+varImpPlot(rf.total.new, main = "Total RF Variable Importance")
+varImpPlot(rf.total.new, n.var = 15, main = "Total RF Variable Importance")
+```
+
+
+
+
+
+
+
+
+

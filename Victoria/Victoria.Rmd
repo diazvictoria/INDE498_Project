@@ -743,6 +743,11 @@ pred.pre <- predict(rf.total.pre, newdata=testing.precrash)
 
 rmse.pre <- sqrt(mean((testing.precrash$SalePrice - pred.pre)^2))
 rmse.pre
+
+
+
+# plotting the importance of each variable
+varImpPlot(rf.total.pre)
 ```
 
 
@@ -757,32 +762,25 @@ rmse.post <- sqrt(mean((testing.postcrash$SalePrice - pred.post)^2))
 rmse.post
 
 
+# plotting the importance of each variable
+varImpPlot(rf.total.post)
+
 ```
 
 
 
-```{r}
-set.seed(1) # actually, I don't think this is needed
 
-theme_set(theme_gray(base_size = 15) ) 
+# entire dataset 
+## random forest 
+```{r} 
+rf.entire <- randomForest(SalePrice~., data=train, ntree=120, importance=TRUE, mtry= 22, nodesize= 50)
+pred.entire <- predict(rf.entire, newdata=testing.postcrash)
 
-results <- NULL
-for( itree in c(1:9, 10, 20, 50, 100, 150, 200, 250)  ){
-  for(i in 1:20){
-      train.ix <- sample(nrow(train.precrash),floor( nrow(train.precrash)/2) )
-      rf <- randomForest( SalePrice ~ ., ntree = itree, data = train.precrash[train.ix,] ) 
-      pred.test <- predict(rf, train.precrash[-train.ix,])
-      this.err <-  length(which(pred.test != train.precrash[-train.ix,]$SalePrice))/length(pred.test) 
-      results <- rbind( results, c(itree, this.err)  )
-      # err.rf <- c(err.rf, length(which(pred.test != data[-train.ix,]$DX_bl))/length(pred.test) )
-  }
-}
+rmse.post <- sqrt(mean((testing.postcrash$SalePrice - pred.post)^2))
+rmse.post
 
-colnames(results) <- c("num_trees","error")
-results <- as.data.frame(results) %>% mutate(num_trees=as.character(num_trees))
-levels( results$num_trees ) <- unique( results$num_trees  )
-results$num_trees <- factor( results$num_trees , unique( results$num_trees  )  )
-ggplot() +
-  geom_boxplot(data = results, aes(y = error, x = num_trees)) +
-  geom_point(size=3) 
+
+
+# plotting the importance of each variable
+varImpPlot(rf.entire)
 ```
