@@ -1,0 +1,423 @@
+---
+title: "Group Project"
+author: "Haena"
+date: "December 7, 2017"
+output: html_document
+---
+
+
+
+```{r}
+library(dplyr)
+library(randomForest)
+library(corrplot)
+library(MASS)
+library(car)
+library(caret)
+
+setwd("C:/Users/haenakim/Documents/INDE498_Project")
+
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+
+train
+
+# finding the dimension of our datasets
+dim(train) 
+
+#Data cleaning for train
+train$Alley <- as.character(train$Alley)
+train$Alley[is.na(train$Alley)] <- "none"
+train$Alley <- as.factor(train$Alley)
+
+train$MasVnrType <- as.character(train$MasVnrType)
+train$MasVnrType[is.na(train$MasVnrType)] <- "none"
+train$MasVnrType <- as.factor(train$MasVnrType)
+
+train$MasVnrArea[is.na(train$MasVnrArea)] <- 0
+
+train$BsmtQual <- as.character(train$BsmtQual)
+train$BsmtQual[is.na(train$BsmtQual)] <- "none"
+train$BsmtQual <- as.factor(train$BsmtQual)
+
+train$BsmtCond <- as.character(train$BsmtCond)
+train$BsmtCond[is.na(train$BsmtCond)] <- "none"
+train$BsmtCond <- as.factor(train$BsmtCond)
+
+train$BsmtExposure <- as.character(train$BsmtExposure)
+train$BsmtExposure[is.na(train$BsmtExposure)] <- "none"
+train$BsmtExposure <- as.factor(train$BsmtExposure)
+
+train$BsmtFinType1 <- as.character(train$BsmtFinType1)
+train$BsmtFinType1[is.na(train$BsmtFinType1)] <- "none"
+train$BsmtFinType1 <- as.factor(train$BsmtFinType1)
+
+train$BsmtFinType2 <- as.character(train$BsmtFinType2)
+train$BsmtFinType2[is.na(train$BsmtFinType2)] <- "none"
+train$BsmtFinType2 <- as.factor(train$BsmtFinType2)
+
+train$FireplaceQu <- as.character(train$FireplaceQu)
+train$FireplaceQu[is.na(train$FireplaceQu)] <- "none"
+train$FireplaceQu <- as.factor(train$FireplaceQu)
+
+train$GarageType <- as.character(train$GarageType)
+train$GarageType[is.na(train$GarageType)] <- "none"
+train$GarageType <- as.factor(train$GarageType)
+
+train$GarageFinish <- as.character(train$GarageFinish)
+train$GarageFinish[is.na(train$GarageFinish)] <- "none"
+train$GarageFinish <- as.factor(train$GarageFinish)
+
+train$GarageQual <- as.character(train$GarageQual)
+train$GarageQual[is.na(train$GarageQual)] <- "none"
+train$GarageQual <- as.factor(train$GarageQual)
+
+train$GarageCond <- as.character(train$GarageCond)
+train$GarageCond[is.na(train$GarageCond)] <- "none"
+train$GarageCond <- as.factor(train$GarageCond)
+
+train$PoolQC <- as.character(train$PoolQC)
+train$PoolQC[is.na(train$PoolQC)] <- "none"
+train$PoolQC <- as.factor(train$PoolQC)
+
+train$Fence <- as.character(train$Fence)
+train$Fence[is.na(train$Fence)] <- "none"
+train$Fence <- as.factor(train$Fence)
+
+train$MiscFeature <- as.character(train$MiscFeature)
+train$MiscFeature[is.na(train$MiscFeature)] <- "none"
+train$MiscFeature <- as.factor(train$MiscFeature)
+
+train$LotFrontage[is.na(train$LotFrontage)] <- 0
+
+train <- train %>% filter(!is.na(Electrical) & !is.na(GarageYrBlt))
+
+#Removing rare factors
+train <- train %>% group_by(MSSubClass) %>% filter(n() >= 6) %>% 
+  group_by(MSZoning) %>% filter(n() >= 6) %>%
+  group_by(Alley) %>% filter(n() >= 6) %>%
+  group_by(LotShape) %>% filter(n() >= 6) %>%
+  group_by(LandContour) %>% filter(n() >= 6) %>%
+  group_by(LotConfig) %>% filter(n() >= 6) %>%
+  group_by(Neighborhood) %>% filter(n() >= 6) %>%
+  group_by(Condition1) %>% filter(n() >= 6) %>%
+  group_by(Condition2) %>% filter(n() >= 6) %>%
+  group_by(BldgType) %>% filter(n() >= 6) %>%
+  group_by(HouseStyle) %>% filter(n() >= 6) %>%
+  group_by(OverallQual) %>% filter(n() >= 6) %>%
+  group_by(OverallCond) %>% filter(n() >= 6) %>%
+  group_by(RoofStyle) %>% filter(n() >= 6) %>%
+  group_by(RoofMatl) %>% filter(n() >= 6) %>%
+  group_by(Exterior1st) %>% filter(n() >= 6) %>%
+  group_by(Exterior2nd) %>% filter(n() >= 6) %>%
+  group_by(MasVnrType) %>% filter(n() >= 6) %>%
+  group_by(ExterQual) %>% filter(n() >= 6) %>%
+  group_by(ExterCond) %>% filter(n() >= 6) %>%
+  group_by(Foundation) %>% filter(n() >= 6) %>%
+  group_by(BsmtQual) %>% filter(n() >= 6) %>%
+  group_by(BsmtCond) %>% filter(n() >= 6) %>%
+  group_by(BsmtExposure) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType1) %>% filter(n() >= 6) %>%
+  group_by(BsmtFinType2) %>% filter(n() >= 6) %>%
+  group_by(Heating) %>% filter(n() >= 6) %>%
+  group_by(HeatingQC) %>% filter(n() >= 6) %>%
+  group_by(CentralAir) %>% filter(n() >= 6) %>%
+  group_by(KitchenQual) %>% filter(n() >= 6) %>%
+  group_by(Functional) %>% filter(n() >= 6) %>%
+  group_by(FireplaceQu) %>% filter(n() >= 6) %>%
+  group_by(GarageType) %>% filter(n() >= 6) %>%
+  group_by(GarageFinish) %>% filter(n() >= 6) %>%
+  group_by(GarageQual) %>% filter(n() >= 6) %>%
+  group_by(GarageCond) %>% filter(n() >= 6) %>%
+  group_by(PavedDrive) %>% filter(n() >= 6) %>%
+  group_by(PoolQC) %>% filter(n() >= 6) %>%
+  group_by(Fence) %>% filter(n() >= 6) %>%
+  group_by(SaleType) %>% filter(n() >= 6) %>%
+  group_by(SaleCondition) %>% filter(n() >= 6)
+  
+
+train$MSSubClass <- factor(train$MSSubClass) 
+train$MSZoning <- factor(train$MSZoning)
+train$Alley <- factor(train$Alley)
+train$LotShape <- factor(train$LotShape)
+train$LandContour <- factor(train$LandContour)
+train$LotConfig <- factor(train$LotConfig)
+train$Neighborhood <- factor(train$Neighborhood)
+train$Condition1 <- factor(train$Condition1)
+train$Condition2 <- factor(train$Condition2)
+train$BldgType <- factor(train$BldgType)
+train$HouseStyle <- factor(train$HouseStyle)
+train$OverallQual <- factor(train$OverallQual)
+train$OverallCond <- factor(train$OverallCond)
+train$RoofStyle <- factor(train$RoofStyle)
+train$RoofMatl <- factor(train$RoofMatl)
+train$Exterior1st <- factor(train$Exterior1st)
+train$Exterior2nd <- factor(train$Exterior2nd)
+train$MasVnrType <- factor(train$MasVnrType)
+train$ExterQual <- factor(train$ExterQual)
+train$ExterCond <- factor(train$ExterCond)
+train$Foundation <- factor(train$Foundation)
+train$BsmtQual <- factor(train$BsmtQual)
+train$BsmtCond <- factor(train$BsmtCond)
+train$BsmtExposure <- factor(train$BsmtExposure)
+train$BsmtFinType1 <- factor(train$BsmtFinType1)
+train$BsmtFinType2 <- factor(train$BsmtFinType2)
+train$Heating <- factor(train$Heating)
+train$HeatingQC <- factor(train$HeatingQC)
+train$CentralAir <- factor(train$CentralAir)
+train$KitchenQual <- factor(train$KitchenQual)
+train$Functional <- factor(train$Functional)
+train$FireplaceQu <- factor(train$FireplaceQu)
+train$GarageType <- factor(train$GarageType)
+train$GarageFinish <- factor(train$GarageFinish)
+train$GarageQual <- factor(train$GarageQual)
+train$GarageCond <- factor(train$GarageCond)
+train$PavedDrive <- factor(train$PavedDrive)
+train$PoolQC <- factor(train$PoolQC)
+train$Fence <- factor(train$Fence)
+train$SaleType <- factor(train$SaleType)
+train$SaleCondition <- factor(train$SaleCondition)
+
+#Keeping only needed columns and adding binary variables for certain features
+train <- train %>%mutate(NumFullBath = FullBath+BsmtFullBath, NumHalfBath = HalfBath+BsmtHalfBath, Deck = ifelse(WoodDeckSF > 0, 1, 0),
+        Porch = ifelse(OpenPorchSF+EnclosedPorch>0,1,0), Fence = ifelse(Fence=="none",0,1)) %>%
+  dplyr::select(-FullBath, -BsmtFullBath, -HalfBath, -BsmtHalfBath, -WoodDeckSF, -OpenPorchSF, -EnclosedPorch, -Street, -Utilities)
+
+#Models
+train <- train %>% dplyr::select(SaleCondition,	MSSubClass   ,	GrLivArea     ,	Neighborhood,	HouseStyle ,	LotArea , YearRemodAdd,	YearBuilt,	RoofMatl      ,	Exterior1st,	OverallCond,	Foundation  ,	BsmtFinType1,	Fireplaces,	GarageType,	GarageCars, GarageArea,	CentralAir    ,	Heating    ,	TotalBsmtSF ,	Fence         ,	YrSold       ,	SalePrice   , NumFullBath ,	NumHalfBath   ,	Porch ,Deck )
+
+#Coercing proper data type
+train$MSSubClass <- factor(train$MSSubClass)
+train$OverallCond <- factor(train$OverallCond)
+train$Fence <- factor(train$Fence)
+train$Deck <- factor(train$Deck)
+train$Porch <- factor(train$Porch)
+
+
+#Checking for multicollinearity
+#pick the ones that are numeric
+
+train[,c( "GrLivArea" ,   "LotArea",       "YearBuilt"   ,  "YearRemodAdd"   ,"Fireplaces"   , "GarageCars" ,  
+ "GarageArea"   ,    "TotalBsmtSF"  ,     "YrSold"          ,"NumFullBath"  ,
+"NumHalfBath",   "Deck"     ,     "Porch"    )] <- lapply(train[,c( "GrLivArea" ,   "LotArea",       "YearBuilt"   ,  "YearRemodAdd"   ,"Fireplaces"   , "GarageCars" ,  
+ "GarageArea"   ,    "TotalBsmtSF"  ,     "YrSold"      ,"NumFullBath"  ,
+"NumHalfBath",   "Deck"     ,     "Porch"    )],as.integer)
+
+
+corrplot(cor(train[,c( "GrLivArea" ,   "LotArea",       "YearBuilt"   ,  "YearRemodAdd"   ,"Fireplaces"   , "GarageCars" ,  
+ "GarageArea"   ,    "TotalBsmtSF"  ,     "YrSold"    ,"NumFullBath"  ,
+"NumHalfBath",   "Deck"     ,     "Porch"    )]))
+
+
+```
+
+
+##DATA CLEANING
+```{r}
+#Remove multicolinear vars
+train <- train %>% dplyr::select(-YearRemodAdd, -GarageCars)
+
+ggplot(train, aes(SalePrice,Neighborhood))+geom_point()
+
+#Neighborhood categories needs to be separated
+table(train$Neighborhood)
+
+train$Blmngtn<-ifelse(train$Neighborhood=="Blmngtn",1,0)
+train$BrDale<-ifelse(train$Neighborhood=="BrDale",1,0)
+train$BrkSide<-ifelse(train$Neighborhood=="BrkSide",1,0)
+train$ClearCr<-ifelse(train$Neighborhood=="ClearCr",1,0)
+train$CollgCr<-ifelse(train$Neighborhood=="CollgCr",1,0)
+train$Crawfor<-ifelse(train$Neighborhood=="Crawfor",1,0)
+train$Edwards<-ifelse(train$Neighborhood=="Edwards",1,0)
+train$Gilbert<-ifelse(train$Neighborhood=="Gilbert",1,0)
+train$IDOTRR<-ifelse(train$Neighborhood=="IDOTRR",1,0)
+train$MeadowV<-ifelse(train$Neighborhood=="MeadowV",1,0)
+train$Mitchel<-ifelse(train$Neighborhood=="Mitchel",1,0)
+train$NAmes<-ifelse(train$Neighborhood=="NAmes",1,0)
+train$NoRidge<-ifelse(train$Neighborhood=="NoRidge",1,0)
+train$NPkVill<-ifelse(train$Neighborhood=="NPkVill",1,0)
+train$NridgHt<-ifelse(train$Neighborhood=="NridgHt",1,0)
+train$NWAmes<-ifelse(train$Neighborhood=="NWAmes",1,0)
+train$OldTown<-ifelse(train$Neighborhood=="OldTown",1,0)
+train$Sawyer<-ifelse(train$Neighborhood=="Sawyer",1,0)
+train$SawyerW<-ifelse(train$Neighborhood=="SawyerW",1,0)
+train$Somerst<-ifelse(train$Neighborhood=="Somerst",1,0)
+train$StoneBr<-ifelse(train$Neighborhood=="StoneBr",1,0)
+train$SWISU<-ifelse(train$Neighborhood=="SWISU",1,0)
+train$Timber<-ifelse(train$Neighborhood=="Timber",1,0)
+train$Veenker<-ifelse(train$Neighborhood=="Veenker",1,0)
+
+#remove neighborhood
+train <- train %>% dplyr::select(-Neighborhood)
+
+lm.realistic <- lm(SalePrice~., data=train)
+
+#Transform to log
+boxcox(SalePrice~., data=train)
+
+corrplot(cor(train[,c( "GrLivArea" ,   "LotArea",       "YearBuilt"  ,"Fireplaces"   ,
+ "GarageArea"   ,    "TotalBsmtSF"  ,     "YrSold"         ,"NumFullBath"  ,
+"NumHalfBath",   "Deck"     ,     "Porch"    )]), type = "upper")
+#less collinearity between variables
+
+#clean data divided into post and pre crash
+ #Split data into 2006-2007 and 2008-2010
+ train.precrash <- train %>% filter(YrSold <= 2007)
+ train.postcrash <- train %>% filter(YrSold > 2007)
+
+ train.precrash <- train.precrash %>% dplyr::select(-YrSold)
+ train.postcrash <- train.postcrash %>% dplyr::select(-YrSold)
+```
+
+##linear regression
+```{R}
+
+#model1 with all data
+lm.realistic.F<- lm(log(SalePrice)~., data=train)
+
+# Conduct diagnostics of the model
+# install.packages("ggfortify")
+library("ggfortify")
+autoplot(lm.realistic.F, which = 1:6, ncol = 3, label.size = 3)
+summary(lm.realistic.F)
+
+#model2 with predata
+lm.realistic.F_pre<- lm(log(SalePrice)~., data=train.precrash)
+
+# Conduct diagnostics of the model
+# install.packages("ggfortify")
+library("ggfortify")
+autoplot(lm.realistic.F_pre, which = 1:6, ncol = 3, label.size = 3)
+summary(lm.realistic.F_pre)
+
+
+#model3 with postdata
+lm.realistic.F_post<- lm(log(SalePrice)~., data=train.postcrash)
+
+
+# Conduct diagnostics of the model
+# install.packages("ggfortify")
+library("ggfortify")
+autoplot(lm.realistic.F_post, which = 1:6, ncol = 3, label.size = 3)
+
+summary(lm.realistic.F_post)
+
+```
+
+## Rank the coefficients for neighborhood to pick most and least expensive neighborhood
+```{r}
+#compare the magnitude of the coefficients to see which neighborhood has the highest 
+
+coeff1<- c(
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Blmngtn"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="BrDale"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="BrkSide"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="ClearCr"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="CollgCr"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Crawfor"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Edwards"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Gilbert"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="IDOTRR"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="MeadowV"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Mitchel"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="NAmes"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="NoRidge"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="NPkVill"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="NridgHt"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="NWAmes"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="OldTown"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Sawyer"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="SawyerW"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Somerst"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="StoneBr"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="SWISU"],
+lm.realistic.F$coefficients[names(lm.realistic.F$coefficients)=="Timber"])
+
+
+
+coeff2<- c(
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Blmngtn"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="BrDale"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="BrkSide"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="ClearCr"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="CollgCr"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Crawfor"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Edwards"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Gilbert"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="IDOTRR"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="MeadowV"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Mitchel"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="NAmes"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="NoRidge"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="NPkVill"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="NridgHt"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="NWAmes"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="OldTown"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Sawyer"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="SawyerW"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Somerst"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="StoneBr"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="SWISU"],
+lm.realistic.F_pre$coefficients[names(lm.realistic.F_pre$coefficients)=="Timber"])
+
+
+
+
+coeff3<- c(
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Blmngtn"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="BrDale"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="BrkSide"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="ClearCr"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="CollgCr"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Crawfor"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Edwards"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Gilbert"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="IDOTRR"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="MeadowV"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Mitchel"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="NAmes"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="NoRidge"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="NPkVill"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="NridgHt"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="NWAmes"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="OldTown"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Sawyer"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="SawyerW"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Somerst"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="StoneBr"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="SWISU"],
+lm.realistic.F_post$coefficients[names(lm.realistic.F_post$coefficients)=="Timber"])
+
+
+
+coeff1<-data.frame(coeff1)
+coeff2<-data.frame(coeff2)
+coeff3<-data.frame(coeff3)
+
+
+
+#for cluster analysis
+coeff1$pre <-coeff2[,1]
+coeff1$post<-coeff3[,1]
+
+coeff1
+# write.csv(coeff1, file = "MyData.csv")
+```
+
+
+##clustering analysis
+```{r}
+require(mclust)
+train.Mclust <- Mclust(coeff1, G=1:4)
+
+summary(train.Mclust,parameters = TRUE) 
+
+plot(coeff1$coeff1,coeff1$pre,col = train.Mclust$classification)
+plot(coeff1$coeff1,coeff1$post,col = train.Mclust$classification)
+plot(coeff1$pre,coeff1$post,col = train.Mclust$classification)
+
+plot(train.Mclust, what="BIC")
+
+train.Mclust$BIC
+
+```
